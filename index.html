@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>المستمر للمحاسبة</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
 </head>
 <body>
     <!-- LOGIN -->
-    <div id="login-screen">
+    <div id="login-screen" style="display:flex">
         <div class="login-card">
             <div class="login-logo">
                 <h1>🏪 المستمر</h1>
@@ -17,24 +17,37 @@
             </div>
             <div class="err-box" id="lerr"></div>
             <div class="ok-box" id="lok"></div>
-            <div class="field">
-                <label>اسم المستخدم</label>
-                <input id="lu" type="text" value="admin" autocomplete="username">
+
+            <!-- قائمة الحسابات -->
+            <div id="accounts-login-list" style="display:none">
+                <div style="margin-bottom:15px">
+                    <h3 style="font-size:15px;margin-bottom:10px;color:var(--accent)">اختر الحساب</h3>
+                    <div id="accounts-grid"></div>
+                </div>
             </div>
-            <div class="field">
-                <label>كلمة المرور</label>
-                <input id="lp" type="password" value="admin123" autocomplete="current-password">
+
+            <!-- نموذج تسجيل الدخول -->
+            <div id="login-form">
+                <div class="field">
+                    <label>اسم المستخدم</label>
+                    <input id="lu" type="text" value="admin" autocomplete="username">
+                </div>
+                <div class="field">
+                    <label>كلمة المرور</label>
+                    <input id="lp" type="password" value="admin123" autocomplete="current-password">
+                </div>
+                <button class="btn btn-primary" id="login-btn" onclick="doLogin()">🔑 تسجيل الدخول</button>
             </div>
-            <button class="btn btn-primary" id="login-btn" onclick="doLogin()">🔑 تسجيل الدخول</button>
         </div>
     </div>
 
     <!-- APP -->
-    <div id="app">
+    <div id="app" style="display:none">
         <nav class="sidebar">
             <div class="sb-logo">
                 <h2>🏪 المستمر</h2>
                 <span id="sb-user">...</span>
+                <div id="sb-account" style="font-size:11px;color:var(--muted);margin-top:4px">...</div>
             </div>
             <div class="nav-items">
                 <!-- الرئيسية -->
@@ -94,6 +107,9 @@
                 <div class="nav-item c3" data-p="users" onclick="go('users')">
                     <span class="ic">👥</span>إدارة المستخدمين
                 </div>
+                <div class="nav-item c3" data-p="accounts" onclick="go('accounts')">
+                    <span class="ic">🏢</span>إدارة الحسابات
+                </div>
                 <div class="nav-item c3" data-p="license" onclick="go('license')">
                     <span class="ic">🔐</span>معلومات الترخيص
                 </div>
@@ -108,8 +124,11 @@
             </div>
         </nav>
 
+        <div class="sb-overlay" id="sb-overlay" onclick="toggleSidebar()"></div>
+
         <main class="main">
             <div class="topbar">
+                <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
                 <h1 id="page-title">لوحة التحكم</h1>
                 <div class="u-badge">👤 <span id="u-name">—</span></div>
             </div>
@@ -128,6 +147,37 @@
 
     <div id="toast"></div>
 
-    <script src="script.js"></script>
+    <!-- تحميل مكتبات JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+    <script>
+        // تحميل ملف WASM المطلوب
+        var sqlJsPromise = fetch('https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.wasm')
+            .then(response => response.arrayBuffer())
+            .then(wasmBuffer => {
+                initSqlJs({
+                    locateFile: file => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/' + file
+                }).then(function(SQL) {
+                    window.SqlJs = SQL;
+                    return SQL;
+                });
+            });
+    </script>
+
+    <!-- تحميل ملف script.js قبل أي تفاعل -->
+    <script src="script.js?v=2"></script>
+
+    <!-- تحميل ملف النسخ الاحتياطية بشكل مشروط -->
+    <script>
+        try {
+            const backupScript = document.createElement('script');
+            backupScript.src = 'backup_functions_sql.js';
+            backupScript.onerror = function() {
+                console.error('فشل تحميل ملف backup_functions_sql.js');
+            };
+            document.head.appendChild(backupScript);
+        } catch (error) {
+            console.error('خطأ في تحميل ملف backup_functions_sql.js:', error);
+        }
+    </script>
 </body>
 </html>
