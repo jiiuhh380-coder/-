@@ -2,9 +2,27 @@
 // قاعدة البيانات المحلية (LocalStorage)
 // ============================================
 const DB = {
+    // الحصول على بادئة قاعدة البيانات للحساب الحالي
+    getDBPrefix() {
+        const currentAccount = localStorage.getItem('current_account') || 'default';
+        return `mostamer_${currentAccount}_`;
+    },
+
+    // الحصول على مفتاح قاعدة البيانات
+    getDBKey(key) {
+        return this.getDBPrefix() + key;
+    },
+
     // تهيئة قاعدة البيانات
     init() {
-        if (!localStorage.getItem('mostamer_initialized')) {
+        if (!localStorage.getItem('mostamer_accounts_initialized')) {
+            this.initAccounts();
+            localStorage.setItem('mostamer_accounts_initialized', 'true');
+        }
+
+        // تهيئة بيانات الحساب الحالي إذا لم تكن موجودة
+        const prefix = this.getDBPrefix();
+        if (!localStorage.getItem(prefix + 'initialized')) {
             this.initUsers();
             this.initProducts();
             this.initSales();
@@ -13,8 +31,99 @@ const DB = {
             this.initMaintenance();
             this.initPurchases();
             this.initSuppliers();
-            localStorage.setItem('mostamer_initialized', 'true');
+            localStorage.setItem(prefix + 'initialized', 'true');
         }
+    },
+
+    // إدارة الحسابات
+    initAccounts() {
+        // إنشاء حساب افتراضي
+        const accounts = [
+            { id: 'default', name: 'الحساب الافتراضي', created_at: new Date().toISOString() }
+        ];
+        localStorage.setItem('mostamer_accounts', JSON.stringify(accounts));
+        localStorage.setItem('current_account', 'default');
+    },
+
+    get accounts() {
+        return JSON.parse(localStorage.getItem('mostamer_accounts') || '[]');
+    },
+
+    saveProducts() {
+        const products = JSON.parse(localStorage.getItem(this.getDBKey('products')) || '[]');
+        localStorage.setItem(this.getDBKey('products'), JSON.stringify(products));
+    },
+
+    saveSales() {
+        const sales = JSON.parse(localStorage.getItem(this.getDBKey('sales')) || '[]');
+        localStorage.setItem(this.getDBKey('sales'), JSON.stringify(sales));
+    },
+
+    savePurchases() {
+        const purchases = JSON.parse(localStorage.getItem(this.getDBKey('purchases')) || '[]');
+        localStorage.setItem(this.getDBKey('purchases'), JSON.stringify(purchases));
+    },
+
+    savePayments() {
+        const payments = JSON.parse(localStorage.getItem(this.getDBKey('payments')) || '[]');
+        localStorage.setItem(this.getDBKey('payments'), JSON.stringify(payments));
+    },
+
+    saveAccount(account) {
+        const accounts = this.accounts;
+        if (account.id) {
+            const index = accounts.findIndex(a => a.id === account.id);
+            if (index !== -1) accounts[index] = account;
+        } else {
+            account.id = 'acc_' + Date.now();
+            account.created_at = new Date().toISOString();
+            accounts.push(account);
+        }
+        localStorage.setItem('mostamer_accounts', JSON.stringify(accounts));
+        return account;
+    },
+
+    deleteAccount(accountId) {
+        if (accountId === 'default') {
+            toast('لا يمكن حذف الحساب الافتراضي', 'error');
+            return false;
+        }
+
+        // حذف جميع البيانات المرتبطة بالحساب
+        const prefix = `mostamer_${accountId}_`;
+        const keysToDelete = [];
+
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith(prefix)) {
+                keysToDelete.push(key);
+            }
+        }
+
+        keysToDelete.forEach(key => localStorage.removeItem(key));
+
+        // حذف الحساب من القائمة
+        const accounts = this.accounts.filter(a => a.id !== accountId);
+        localStorage.setItem('mostamer_accounts', JSON.stringify(accounts));
+
+        return true;
+    },
+
+    switchAccount(accountId) {
+        const account = this.accounts.find(a => a.id === accountId);
+        if (account) {
+            localStorage.setItem('current_account', accountId);
+            // إعادة تهيئة قاعدة البيانات للحساب الجديد
+            this.init();
+            return true;
+        }
+        return false;
+    },
+
+    getCurrentAccount() {
+        const accountId = localStorage.getItem('current_account') || 'default';
+        const accounts = JSON.parse(localStorage.getItem('mostamer_accounts') || '[{"id":"default","name":"الحساب الافتراضي"}]');
+        return accounts.find(a => a.id === accountId);
     },
 
     // المستخدمين
@@ -22,11 +131,11 @@ const DB = {
         const users = [
             { id: 1, username: 'admin', password: 'admin123', role: 'admin', name: 'المدير' }
         ];
-        localStorage.setItem('users', JSON.stringify(users));
+        localStorage.setItem(this.getDBKey('users'), JSON.stringify(users));
     },
 
     get users() {
-        return JSON.parse(localStorage.getItem('users') || '[]');
+        return JSON.parse(localStorage.getItem(this.getDBKey('users')) || '[]');
     },
 
     saveUser(user) {
@@ -38,13 +147,13 @@ const DB = {
             user.id = Date.now();
             users.push(user);
         }
-        localStorage.setItem('users', JSON.stringify(users));
+        localStorage.setItem(this.getDBKey('users'), JSON.stringify(users));
         return user;
     },
 
     deleteUser(id) {
         const users = this.users.filter(u => u.id !== id);
-        localStorage.setItem('users', JSON.stringify(users));
+        localStorage.setItem(this.getDBKey('users'), JSON.stringify(users));
     },
 
     // المنتجات
@@ -54,11 +163,11 @@ const DB = {
             { id: 2, name: 'Samsung S24', brand: 'Samsung', model: 'S24', category: 'موبايلات', cost_price: 3000, selling_price: 3800, quantity: 8, min_stock: 5, barcode: '1234567890124', condition: 'جديد' },
             { id: 3, name: 'شاحن سريع', brand: 'Generic', model: 'QC3.0', category: 'ملحقات', cost_price: 50, selling_price: 100, quantity: 20, min_stock: 10, barcode: '1234567890125', condition: '-' }
         ];
-        localStorage.setItem('products', JSON.stringify(products));
+        localStorage.setItem(this.getDBKey('products'), JSON.stringify(products));
     },
 
     get products() {
-        return JSON.parse(localStorage.getItem('products') || '[]');
+        return JSON.parse(localStorage.getItem(this.getDBKey('products')) || '[]');
     },
 
     saveProduct(product) {
@@ -70,22 +179,22 @@ const DB = {
             product.id = Date.now();
             products.push(product);
         }
-        localStorage.setItem('products', JSON.stringify(products));
+        localStorage.setItem(this.getDBKey('products'), JSON.stringify(products));
         return product;
     },
 
     deleteProduct(id) {
         const products = this.products.filter(p => p.id !== id);
-        localStorage.setItem('products', JSON.stringify(products));
+        localStorage.setItem(this.getDBKey('products'), JSON.stringify(products));
     },
 
     // المبيعات
     initSales() {
-        localStorage.setItem('sales', JSON.stringify([]));
+        localStorage.setItem(this.getDBKey('sales'), JSON.stringify([]));
     },
 
     get sales() {
-        return JSON.parse(localStorage.getItem('sales') || '[]');
+        return JSON.parse(localStorage.getItem(this.getDBKey('sales')) || '[]');
     },
 
     saveSale(sale) {
@@ -93,7 +202,7 @@ const DB = {
         const index = sales.findIndex(s => s.id === sale.id);
         if (index !== -1) {
             sales[index] = sale;
-            localStorage.setItem('sales', JSON.stringify(sales));
+            localStorage.setItem(this.getDBKey('sales'), JSON.stringify(sales));
             return sale;
         }
         sale.id = Date.now();
@@ -101,7 +210,7 @@ const DB = {
         sale.sale_date = new Date().toISOString().split('T')[0];
         sale.sale_time = new Date().toLocaleTimeString('ar-SA');
         sales.push(sale);
-        localStorage.setItem('sales', JSON.stringify(sales));
+        localStorage.setItem(this.getDBKey('sales'), JSON.stringify(sales));
         return sale;
     },
 
@@ -110,7 +219,7 @@ const DB = {
         const index = sales.findIndex(s => s.id === sale.id);
         if (index !== -1) {
             sales[index] = sale;
-            localStorage.setItem('sales', JSON.stringify(sales));
+            localStorage.setItem(this.getDBKey('sales'), JSON.stringify(sales));
             return sale;
         }
         return null;
@@ -125,20 +234,20 @@ const DB = {
 
     deleteSale(id) {
         const sales = this.sales.filter(s => s.id !== id);
-        localStorage.setItem('sales', JSON.stringify(sales));
+        localStorage.setItem(this.getDBKey('sales'), JSON.stringify(sales));
     },
 
     clearSales() {
-        localStorage.setItem('sales', JSON.stringify([]));
+        localStorage.setItem(this.getDBKey('sales'), JSON.stringify([]));
     },
 
     // المصاريف
     initExpenses() {
-        localStorage.setItem('expenses', JSON.stringify([]));
+        localStorage.setItem(this.getDBKey('expenses'), JSON.stringify([]));
     },
 
     get expenses() {
-        return JSON.parse(localStorage.getItem('expenses') || '[]');
+        return JSON.parse(localStorage.getItem(this.getDBKey('expenses')) || '[]');
     },
 
     saveExpense(expense) {
@@ -146,13 +255,13 @@ const DB = {
         expense.id = Date.now();
         expense.date = new Date().toISOString().split('T')[0];
         expenses.push(expense);
-        localStorage.setItem('expenses', JSON.stringify(expenses));
+        localStorage.setItem(this.getDBKey('expenses'), JSON.stringify(expenses));
         return expense;
     },
 
     deleteExpense(id) {
         const expenses = this.expenses.filter(e => e.id !== id);
-        localStorage.setItem('expenses', JSON.stringify(expenses));
+        localStorage.setItem(this.getDBKey('expenses'), JSON.stringify(expenses));
     },
 
     // الإعدادات
@@ -163,24 +272,24 @@ const DB = {
             language: 'ar',
             theme: 'dark'
         };
-        localStorage.setItem('settings', JSON.stringify(settings));
+        localStorage.setItem(this.getDBKey('settings'), JSON.stringify(settings));
     },
 
     get settings() {
-        return JSON.parse(localStorage.getItem('settings') || '{}');
+        return JSON.parse(localStorage.getItem(this.getDBKey('settings')) || '{}');
     },
 
     saveSettings(settings) {
-        localStorage.setItem('settings', JSON.stringify(settings));
+        localStorage.setItem(this.getDBKey('settings'), JSON.stringify(settings));
     },
 
     // الصيانة
     initMaintenance() {
-        localStorage.setItem('maintenance', JSON.stringify([]));
+        localStorage.setItem(this.getDBKey('maintenance'), JSON.stringify([]));
     },
 
     get maintenance() {
-        return JSON.parse(localStorage.getItem('maintenance') || '[]');
+        return JSON.parse(localStorage.getItem(this.getDBKey('maintenance')) || '[]');
     },
 
     saveMaintenance(item) {
@@ -195,50 +304,52 @@ const DB = {
             item.status = item.status || 'قيد الإصلاح';
             items.push(item);
         }
-        localStorage.setItem('maintenance', JSON.stringify(items));
+        localStorage.setItem(this.getDBKey('maintenance'), JSON.stringify(items));
         return item;
     },
 
     deleteMaintenance(id) {
         const items = this.maintenance.filter(i => i.id !== id);
-        localStorage.setItem('maintenance', JSON.stringify(items));
+        localStorage.setItem(this.getDBKey('maintenance'), JSON.stringify(items));
     },
 
     clearMaintenance() {
-        localStorage.setItem('maintenance', JSON.stringify([]));
+        localStorage.setItem(this.getDBKey('maintenance'), JSON.stringify([]));
     },
 
     // المشتريات
     initPurchases() {
-        localStorage.setItem('purchases', JSON.stringify([]));
+        localStorage.setItem(this.getDBKey('purchases'), JSON.stringify([]));
     },
 
     get purchases() {
-        return JSON.parse(localStorage.getItem('purchases') || '[]');
+        const purchases = localStorage.getItem(this.getDBKey('purchases'));
+        return purchases ? JSON.parse(purchases) : [];
     },
 
     savePurchase(purchase) {
         const purchases = this.purchases;
-        if (purchase.id) {
-            const index = purchases.findIndex(p => p.id === purchase.id);
-            if (index !== -1) purchases[index] = purchase;
-        } else {
+        // التأكد من أن الفاتورة جديدة (بدون id)
+        if (purchase.id === undefined || purchase.id === null) {
             purchase.id = Date.now();
             purchase.invoice_number = this.generatePurchaseInvoiceNumber();
             purchase.purchase_date = new Date().toISOString().split('T')[0];
             purchases.push(purchase);
+        } else {
+            const index = purchases.findIndex(p => p.id === purchase.id);
+            if (index !== -1) purchases[index] = purchase;
         }
-        localStorage.setItem('purchases', JSON.stringify(purchases));
+        localStorage.setItem(this.getDBKey('purchases'), JSON.stringify(purchases));
         return purchase;
     },
 
     deletePurchase(id) {
         const purchases = this.purchases.filter(p => p.id !== id);
-        localStorage.setItem('purchases', JSON.stringify(purchases));
+        localStorage.setItem(this.getDBKey('purchases'), JSON.stringify(purchases));
     },
 
     clearPurchases() {
-        localStorage.setItem('purchases', JSON.stringify([]));
+        localStorage.setItem(this.getDBKey('purchases'), JSON.stringify([]));
     },
 
     generatePurchaseInvoiceNumber() {
@@ -250,11 +361,11 @@ const DB = {
 
     // الموردين
     initSuppliers() {
-        localStorage.setItem('suppliers', JSON.stringify([]));
+        localStorage.setItem(this.getDBKey('suppliers'), JSON.stringify([]));
     },
 
     get suppliers() {
-        return JSON.parse(localStorage.getItem('suppliers') || '[]');
+        return JSON.parse(localStorage.getItem(this.getDBKey('suppliers')) || '[]');
     },
 
     saveSupplier(supplier) {
@@ -266,13 +377,27 @@ const DB = {
             supplier.id = Date.now();
             suppliers.push(supplier);
         }
-        localStorage.setItem('suppliers', JSON.stringify(suppliers));
+        localStorage.setItem(this.getDBKey('suppliers'), JSON.stringify(suppliers));
         return supplier;
     },
 
     deleteSupplier(id) {
         const suppliers = this.suppliers.filter(s => s.id !== id);
-        localStorage.setItem('suppliers', JSON.stringify(suppliers));
+        localStorage.setItem(this.getDBKey('suppliers'), JSON.stringify(suppliers));
+    },
+
+    // إدارة الصيانة
+    saveMaintenance() {
+        localStorage.setItem(this.getDBKey('maintenance'), JSON.stringify(this.maintenance));
+    },
+
+    loadMaintenance() {
+        const data = localStorage.getItem(this.getDBKey('maintenance'));
+        if (data) {
+            this.maintenance = JSON.parse(data);
+        } else {
+            this.maintenance = [];
+        }
     }
 };
 
@@ -286,7 +411,12 @@ const Auth = {
         const user = DB.users.find(u => u.username === username && u.password === password);
         if (user) {
             this.currentUser = user;
-            localStorage.setItem('currentUser', JSON.stringify(user));
+            // حفظ المستخدم مع معرف الحساب الحالي
+            const currentAccount = DB.getCurrentAccount();
+            localStorage.setItem('currentUser', JSON.stringify({
+                ...user,
+                account_id: currentAccount.id
+            }));
             return true;
         }
         return false;
@@ -300,8 +430,14 @@ const Auth = {
     checkSession() {
         const user = JSON.parse(localStorage.getItem('currentUser'));
         if (user !== null) {
-            this.currentUser = user;
-            return true;
+            // التحقق من أن المستخدم ينتمي للحساب الحالي
+            const currentAccount = DB.getCurrentAccount();
+            if (user.account_id === currentAccount.id) {
+                this.currentUser = user;
+                return true;
+            }
+            // إذا لم يكن المستخدم ينتمي للحساب الحالي، قم بتسجيل الخروج
+            this.logout();
         }
         return false;
     }
@@ -390,7 +526,7 @@ async function api(path, method = 'GET', body = null) {
             }
             if (path.includes('/api/maintenance/') && method === 'PUT') {
                 const id = parseInt(path.split('/').pop());
-                const item = DB.maintenance.find(i => i.id === id);
+                const item = DB.getMaintenance().find(i => i.id === id);
                 if (item) {
                     Object.assign(item, body);
                     DB.saveMaintenance(item);
@@ -404,7 +540,7 @@ async function api(path, method = 'GET', body = null) {
                 return { success: true, message: 'تم حذف طلب الصيانة' };
             }
             if (path === '/api/maintenance') {
-                let data = DB.maintenance;
+                let data = DB.getMaintenance();
                 const urlParams = new URLSearchParams(path.split('?')[1]);
                 const status = urlParams.get('status');
                 if (status) {
@@ -431,12 +567,17 @@ async function api(path, method = 'GET', body = null) {
                 return { success: true, message: 'تم حذف جميع المشتريات' };
             }
             if (path === '/api/purchases/add' && method === 'POST') {
+                const now = new Date();
                 const purchase = {
                     supplier_id: body.supplier_id,
                     supplier_name: body.supplier_id ? DB.suppliers.find(s => s.id === body.supplier_id)?.name || '' : '',
                     paid_amount: parseFloat(body.paid_amount) || 0,
-                    items: body.items || [],
-                    total_amount: body.items?.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0) || 0
+                    items: (body.items || []).map((item, index) => ({
+                        ...item,
+                        id: item.id || Date.now() + index
+                    })),
+                    total_amount: body.items?.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0) || 0,
+                    purchase_date: now.toISOString().split('T')[0]
                 };
                 purchase.remaining_amount = purchase.total_amount - purchase.paid_amount;
                 const saved = DB.savePurchase(purchase);
@@ -469,24 +610,52 @@ async function api(path, method = 'GET', body = null) {
                 DB.deletePurchase(id);
                 return { success: true, message: 'تم حذف فاتورة الشراء' };
             }
-            if (path === '/api/purchases') {
-                const urlParams = new URLSearchParams(path.split('?')[1]);
-                const period = urlParams.get('period') || 'شهر';
-                let data = DB.purchases;
-                const now = new Date();
-                if (period === 'اليوم') {
-                    data = data.filter(p => p.purchase_date === now.toISOString().split('T')[0]);
-                } else if (period === 'أسبوع') {
-                    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-                    data = data.filter(p => new Date(p.purchase_date) >= weekAgo);
-                } else if (period === 'شهر') {
-                    const monthAgo = new Date(now.getFullYear(), now.getMonth(), 1);
-                    data = data.filter(p => new Date(p.purchase_date) >= monthAgo);
-                } else if (period === 'سنة') {
-                    const yearAgo = new Date(now.getFullYear(), 0, 1);
-                    data = data.filter(p => new Date(p.purchase_date) >= yearAgo);
+            if (path.includes('/api/purchases/') && method === 'GET') {
+                const id = parseInt(path.split('/').pop());
+                const purchase = DB.purchases.find(p => p.id === id);
+                if (purchase) {
+                    const details = (purchase.items || []).map(item => {
+                        const product = DB.products.find(p => p.id === item.product_id);
+                        return {
+                            id: item.id,
+                            product_name: product?.name || 'غير معروف',
+                            quantity: item.quantity,
+                            unit_price: item.unit_price,
+                            sell_price: item.sell_price || 0,
+                            total_price: item.quantity * item.unit_price
+                        };
+                    });
+                    console.log('API - Purchase:', purchase);
+                    console.log('API - Purchase keys:', Object.keys(purchase));
+                    console.log('API - Purchase invoice_number:', purchase.invoice_number);
+                    console.log('API - Purchase purchase_date:', purchase.purchase_date);
+                    console.log('API - Details:', details);
+                    return { success: true, data: { purchase, details } };
                 }
-                return { success: true, data: data };
+                return { success: false, message: 'فاتورة الشراء غير موجودة' };
+            }
+            if (path.startsWith('/api/purchases')) {
+                // التعامل مع عرض فواتير المشتريات
+                if (path === '/api/purchases' || path.startsWith('/api/purchases?')) {
+                    const queryString = path.split('?')[1];
+                    const urlParams = queryString ? new URLSearchParams(queryString) : new URLSearchParams();
+                    const period = urlParams.get('period') || 'شهر';
+                    let data = DB.purchases;
+                    const now = new Date();
+                    if (period === 'اليوم') {
+                        data = data.filter(p => p.purchase_date === now.toISOString().split('T')[0]);
+                    } else if (period === 'أسبوع') {
+                        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                        data = data.filter(p => new Date(p.purchase_date) >= weekAgo);
+                    } else if (period === 'شهر') {
+                        const monthAgo = new Date(now.getFullYear(), now.getMonth(), 1);
+                        data = data.filter(p => new Date(p.purchase_date) >= monthAgo);
+                    } else if (period === 'سنة') {
+                        const yearAgo = new Date(now.getFullYear(), 0, 1);
+                        data = data.filter(p => new Date(p.purchase_date) >= yearAgo);
+                    }
+                    return { success: true, data: data };
+                }
             }
             if (path.includes('/api/purchases/') && path.includes('/pay') && method === 'POST') {
                 const id = parseInt(path.split('/')[3]);
@@ -499,6 +668,17 @@ async function api(path, method = 'GET', body = null) {
                     return { success: true, message: 'تم تسجيل الدفعة', data: purchase };
                 }
                 return { success: false, message: 'فاتورة الشراء غير موجودة' };
+            }
+        }
+
+        // التعامل مع المنتجات
+        if (path.includes('/api/products')) {
+            if (path === '/api/products/add' && method === 'POST') {
+                const product = DB.saveProduct(body);
+                return { success: true, message: 'تم إضافة المنتج', data: product };
+            }
+            if (path === '/api/products') {
+                return { success: true, data: DB.products };
             }
         }
 
@@ -538,6 +718,8 @@ async function api(path, method = 'GET', body = null) {
 // ============================================
 // تسجيل الدخول
 // ============================================
+let selectedAccount = null;
+
 function doLogin() {
     const btn = document.getElementById('login-btn');
     const un = document.getElementById('lu').value.trim();
@@ -562,6 +744,11 @@ function doLogin() {
             document.getElementById('app').style.display = 'flex';
             document.getElementById('u-name').textContent = Auth.currentUser.name;
             document.getElementById('sb-user').textContent = 'مرحباً، ' + Auth.currentUser.name;
+
+            // عرض معلومات الحساب الحالي
+            const currentAccount = DB.getCurrentAccount();
+            document.getElementById('sb-account').textContent = '🏢 ' + (currentAccount?.name || 'الحساب الافتراضي');
+
             go('dashboard');
         }, 1000);
     } else {
@@ -572,6 +759,148 @@ function doLogin() {
     btn.innerHTML = '🔑 تسجيل الدخول';
 }
 
+function showAccountsList() {
+    const accounts = DB.accounts;
+    const accountsGrid = document.getElementById('accounts-grid');
+
+    // عرض قائمة الحسابات
+    accountsGrid.innerHTML = accounts.map(acc => `
+        <div class="account-item" onclick="selectAccount('${acc.id}')" data-id="${acc.id}">
+            <div class="account-item-icon">🏢</div>
+            <div class="account-item-name">${acc.name}</div>
+            <div class="account-item-id">${acc.id === 'default' ? 'افتراضي' : 'محمي'}</div>
+        </div>
+    `).join('');
+
+    // إظهار قائمة الحسابات وإخفاء نموذج تسجيل الدخول
+    document.getElementById('accounts-login-list').style.display = 'block';
+    document.getElementById('login-form').style.display = 'none';
+}
+
+function selectAccount(accountId) {
+    const account = DB.accounts.find(a => a.id === accountId);
+    selectedAccount = account;
+
+    // تحديث واجهة المستخدم
+    document.querySelectorAll('.account-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.dataset.id === accountId) {
+            item.classList.add('active');
+        }
+    });
+
+    // إذا كان الحساب الافتراضي
+    if (accountId === 'default') {
+        // إذا كان الحساب الافتراضي محمي بكلمة مرور، اطلبها
+        if (account.password) {
+            omo('🔐 كلمة مرور الحساب الافتراضي', `
+                <div class="fg">
+                    <div class="ff full">
+                        <label>اسم الحساب</label>
+                        <input type="text" value="${account?.name}" disabled style="background:var(--bg);opacity:0.7">
+                    </div>
+                    <div class="ff full">
+                        <label>كلمة مرور الحساب *</label>
+                        <input id="account-login-password" type="password" placeholder="أدخل كلمة مرور الحساب الافتراضي">
+                    </div>
+                </div>
+            `, `
+                <button class="btn btn-ghost" onclick="cmo()">إلغاء</button>
+                <button class="btn btn-success" onclick="confirmAccountLogin('${accountId}')">🔓 فتح الحساب</button>
+            `);
+            return;
+        }
+
+        // إذا لم يكن محمي، ادخل مباشرة
+        if (DB.switchAccount(accountId)) {
+            // تسجيل الدخول التلقائي بمستخدم admin
+            const adminUser = DB.users.find(u => u.username === 'admin');
+            if (adminUser) {
+                Auth.currentUser = adminUser;
+                localStorage.setItem('currentUser', JSON.stringify({
+                    ...adminUser,
+                    account_id: account.id
+                }));
+            }
+
+            // إخفاء شاشة الدخول وعرض التطبيق
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app').style.display = 'flex';
+            document.getElementById('u-name').textContent = adminUser.name;
+            document.getElementById('sb-user').textContent = 'مرحباً، ' + adminUser.name;
+            document.getElementById('sb-account').textContent = '🏢 ' + account.name;
+
+            toast('✅ تم فتح الحساب بنجاح');
+            go('dashboard');
+        }
+        return;
+    }
+
+    // للحسابات المحمية بكلمة مرور، اطلبها
+    omo('🔐 كلمة مرور الحساب', `
+        <div class="fg">
+            <div class="ff full">
+                <label>اسم الحساب</label>
+                <input type="text" value="${account?.name}" disabled style="background:var(--bg);opacity:0.7">
+            </div>
+            <div class="ff full">
+                <label>كلمة مرور الحساب *</label>
+                <input id="account-login-password" type="password" placeholder="أدخل كلمة مرور الحساب">
+            </div>
+        </div>
+    `, `
+        <button class="btn btn-ghost" onclick="cmo()">إلغاء</button>
+        <button class="btn btn-success" onclick="confirmAccountLogin('${accountId}')">🔓 فتح الحساب</button>
+    `);
+}
+
+function confirmAccountLogin(accountId) {
+    const enteredPassword = document.getElementById('account-login-password').value.trim();
+    const account = DB.accounts.find(a => a.id === accountId);
+
+    if (!enteredPassword) {
+        toast('يرجى إدخال كلمة المرور', 'error');
+        return;
+    }
+
+    // التحقق من كلمة المرور
+    if (btoa(enteredPassword) !== account.password) {
+        toast('كلمة المرور غير صحيحة', 'error');
+        return;
+    }
+
+    // التبديل إلى الحساب والدخول مباشرة
+    if (DB.switchAccount(accountId)) {
+        cmo();
+
+        // تسجيل الدخول التلقائي بمستخدم admin
+        const adminUser = DB.users.find(u => u.username === 'admin');
+        if (adminUser) {
+            Auth.currentUser = adminUser;
+            localStorage.setItem('currentUser', JSON.stringify({
+                ...adminUser,
+                account_id: account.id
+            }));
+        }
+
+        // إخفاء شاشة الدخول وعرض التطبيق
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        document.getElementById('u-name').textContent = adminUser.name;
+        document.getElementById('sb-user').textContent = 'مرحباً، ' + adminUser.name;
+        document.getElementById('sb-account').textContent = '🏢 ' + account.name;
+
+        toast('✅ تم فتح الحساب بنجاح');
+        go('dashboard');
+    }
+}
+
+function showLoginForm() {
+    document.getElementById('accounts-login-list').style.display = 'none';
+    document.getElementById('login-form').style.display = 'block';
+    selectedAccount = null;
+}
+
 function showErr(msg) {
     const el = document.getElementById('lerr');
     el.textContent = '❌ ' + msg;
@@ -579,8 +908,18 @@ function showErr(msg) {
 }
 
 function doLogout() {
-    Auth.logout();
-    location.reload();
+    if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+        Auth.logout();
+        location.reload();
+    }
+}
+
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sb-overlay');
+
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
 }
 
 // ============================================
@@ -603,50 +942,20 @@ const TITLES = {
     count: 'الجرد',
     mobile: 'إدارة الموبايلات',
     users: 'إدارة المستخدمين',
+    accounts: 'إدارة الحسابات',
     license: 'معلومات الترخيص',
     settings: 'الإعدادات',
     inventory: 'المخزون'
 };
-
-function go(name) {
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.querySelector(`[data-p="${name}"]`)?.classList.add('active');
-    document.getElementById('page-title').textContent = TITLES[name] || name;
-
-    const fns = {
-        dashboard,
-        products,
-        sales,
-        purchases,
-        pos,
-        suppliers,
-        customers,
-        expenses,
-        maintenance,
-        reports,
-        currency,
-        barcode_sale,
-        barcode_return,
-        count,
-        mobile,
-        users,
-        license,
-        settings,
-        inventory
-    };
-
-    if (fns[name]) fns[name]();
-    else document.getElementById('pc').innerHTML = `<div class="tw"><div class="th"><h3>${name}</h3></div><div style="padding:20px">✅ قسم ${TITLES[name] || name} - جاهز للاستخدام</div></div>`;
-}
 
 // ============================================
 // لوحة التحكم
 // ============================================
 function dashboard() {
     const c = document.getElementById('pc');
-    const sales = DB.sales;
-    const products = DB.products;
-    const expenses = DB.expenses;
+    const sales = DB.sales || [];
+    const products = DB.products || [];
+    const expenses = DB.getExpenses ? DB.getExpenses() : [];
 
     // حساب الإحصائيات
     const today = new Date().toISOString().split('T')[0];
@@ -693,13 +1002,15 @@ function dashboard() {
     // أعلى المنتجات
     const productSales = {};
     sales.forEach(sale => {
-        sale.items.forEach(item => {
-            if (!productSales[item.product_id]) {
-                productSales[item.product_id] = { qty: 0, revenue: 0 };
-            }
-            productSales[item.product_id].qty += item.quantity;
-            productSales[item.product_id].revenue += item.quantity * item.unit_price;
-        });
+        if (sale.items && Array.isArray(sale.items)) {
+            sale.items.forEach(item => {
+                if (!productSales[item.product_id]) {
+                    productSales[item.product_id] = { qty: 0, revenue: 0 };
+                }
+                productSales[item.product_id].qty += item.quantity;
+                productSales[item.product_id].revenue += item.quantity * item.unit_price;
+            });
+        }
     });
 
     const topProducts = Object.entries(productSales)
@@ -739,10 +1050,13 @@ function products(q = '') {
     document.getElementById('pcnt').textContent = filtered.length + ' منتج';
     document.getElementById('pt').innerHTML = filtered.length
         ? `<table><tr><th>الاسم</th><th>الماركة</th><th>الفئة</th><th>شراء</th><th>بيع</th><th>الكمية</th><th>الحالة</th><th></th></tr>
-        ${filtered.map(p => `<tr><td><b>${p.name}</b></td><td>${p.brand}</td><td>${p.category}</td><td>${fmt(p.cost_price)}</td><td>${fmt(p.selling_price)}</td>
+        ${filtered.map(p => {
+            const productJson = JSON.stringify(p);
+            return `<tr><td><b>${p.name}</b></td><td>${p.brand}</td><td>${p.category}</td><td>${fmt(p.cost_price)}</td><td>${fmt(p.selling_price)}</td>
         <td><span class="badge ${p.quantity <= 0 ? 'br' : p.quantity <= p.min_stock ? 'bw' : 'bg'}">${p.quantity}</span></td>
         <td>${p.condition}</td>
-        <td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick='eProd(${JSON.stringify(p)})'>✏️</button> <button class="btn btn-danger btn-sm" onclick="dProd(${p.id},'${p.name.replace(/'/g, '')}')">🗑️</button></td></tr>`).join('')}</table>`
+        <td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick='eProd(${productJson})'>✏️</button> <button class="btn btn-danger btn-sm" onclick="dProd(${p.id},'${p.name.replace(/'/g, '')}')">🗑️</button></td></tr>`;
+        }).join('')}</table>`
         : em();
 }
 
@@ -1122,7 +1436,9 @@ function renderSalesTable(data) {
         <th>الكاشير</th>
         <th></th>
       </tr>
-      ${data.map(s => `
+      ${data.map(s => {
+        const payButton = s.remaining_amount > 0 ? `<button class="btn btn-warn btn-sm" onclick="paySale(${s.id},${s.remaining_amount})" title="تسجيل دفعة">💳</button>` : '';
+        return `
       <tr>
         <td><b style="color:var(--accent)">${s.invoice_number}</b></td>
         <td>${s.sale_date}</td>
@@ -1135,17 +1451,21 @@ function renderSalesTable(data) {
         <td>${s.username}</td>
         <td style="white-space:nowrap">
           <button class="btn btn-ghost btn-sm" onclick="vSale(${s.id})" title="عرض التفاصيل">👁️</button>
-          ${s.remaining_amount > 0 ? `<button class="btn btn-warn btn-sm" onclick="paySale(${s.id},${s.remaining_amount})" title="تسجيل دفعة">💳</button>` : ''}
+          ${payButton}
           <button class="btn btn-info btn-sm" onclick="returnToInventory(${s.id})" title="إرجاع إلى المخزون">↩️</button>
           <button class="btn btn-danger btn-sm" onclick="deleteSale(${s.id})" title="حذف الفاتورة">🗑️</button>
         </td>
-      </tr>`).join('')}
+      </tr>`;
+      }).join('')}
     </table>`;
 }
 
 function vSale(id) {
     const sale = DB.sales.find(s => s.id === id);
-    if (!sale) return;
+    if (!sale || !sale.items || !Array.isArray(sale.items)) {
+        toast('خطأ في تحميل بيانات الفاتورة', 'error');
+        return;
+    }
 
     let html = `
     <div style="background:var(--bg3);padding:14px;border-radius:9px;margin-bottom:14px">
@@ -1215,14 +1535,15 @@ function vSale(id) {
       </div>
     </div>`;
 
+    const payButton = sale.remaining_amount > 0 ? `<button class="btn btn-warn" onclick="paySale(${id},${sale.remaining_amount})">💳 تسجيل دفعة</button>` : '';
     omo(`📋 تفاصيل الفاتورة رقم: ${sale.invoice_number}`, html,
-    `${sale.remaining_amount > 0 ? `<button class="btn btn-warn" onclick="paySale(${id},${sale.remaining_amount})">💳 تسجيل دفعة</button>` : ''}
+    `${payButton}
     <button class="btn btn-ghost" onclick="cmo()">✖ إغلاق</button>`);
 }
 
 function returnToInventory(id) {
     const sale = DB.sales.find(s => s.id === id);
-    if (!sale) {
+    if (!sale || !sale.items || !Array.isArray(sale.items)) {
         toast('خطأ في تحميل البيانات', 'error');
         return;
     }
@@ -1260,7 +1581,7 @@ function returnToInventory(id) {
 
 function confirmReturnToInventory(id) {
     const sale = DB.sales.find(s => s.id === id);
-    if (!sale) {
+    if (!sale || !sale.items || !Array.isArray(sale.items)) {
         toast('خطأ في تحميل البيانات', 'error');
         return;
     }
@@ -1347,7 +1668,7 @@ function confirmDeleteSale(id) {
 // ============================================
 function expenses() {
     const c = document.getElementById('pc');
-    const allExpenses = DB.expenses;
+    const allExpenses = DB.getExpenses ? DB.getExpenses() : [];
 
     c.innerHTML = `<div class="sb-bar"><input class="si" id="es" placeholder="🔍 بحث..." oninput="filterExpenses()"><button class="btn btn-success" onclick="addExpense()">+ إضافة مصروف</button></div>
     <div class="tw"><div class="th"><h3>💸 المصاريف</h3><span id="ecnt" style="color:var(--muted);font-size:13px"></span></div><div id="et">${ld()}</div></div>`;
@@ -1404,7 +1725,7 @@ function deleteExpense(id) {
 
 function filterExpenses() {
     const search = document.getElementById('es')?.value || '';
-    const allExpenses = DB.expenses;
+    const allExpenses = DB.getExpenses ? DB.getExpenses() : [];
 
     if (!search) {
         renderExpenses(allExpenses);
@@ -1431,8 +1752,11 @@ function users() {
 
     document.getElementById('ut').innerHTML = allUsers.length
         ? `<table><tr><th>الاسم</th><th>اسم المستخدم</th><th>الدور</th><th></th></tr>
-        ${allUsers.map(u => `<tr><td>${u.name}</td><td>${u.username}</td><td>${u.role}</td>
-        <td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick='eUser(${JSON.stringify(u)})'>✏️</button> ${u.username !== 'admin' ? `<button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id})">🗑️</button>` : ''}</td></tr>`).join('')}</table>`
+        ${allUsers.map(u => {
+            const userJson = JSON.stringify(u);
+            return `<tr><td>${u.name}</td><td>${u.username}</td><td>${u.role}</td>
+            <td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="eUser(${userJson})">✏️</button> ${u.username !== 'admin' ? `<button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id})">🗑️</button>` : ''}</td></tr>`;
+        }).join('')}</table>`
         : em();
 }
 
@@ -1515,32 +1839,126 @@ function settings() {
     const c = document.getElementById('pc');
     c.innerHTML = `
     <div class="tw">
-        <div class="th"><h3>⚙️ الإعدادات</h3></div>
+        <div class="th"><h3>⚙️ إعدادات النظام</h3></div>
         <div style="padding:20px">
-            <div class="fg">
-                <div class="ff"><label>اسم الشركة</label><input id="sn" value="${settings.companyName || ''}"></div>
-                <div class="ff"><label>العملة</label><input id="sc" value="${settings.currency || ''}"></div>
-                <div class="ff"><label>اللغة</label><select id="sl"><option value="ar" ${settings.language === 'ar' ? 'selected' : ''}>العربية</option><option value="en" ${settings.language === 'en' ? 'selected' : ''}>English</option></select></div>
-                <div class="ff"><label>السمة</label><select id="st"><option value="dark" ${settings.theme === 'dark' ? 'selected' : ''}>داكن</option><option value="light" ${settings.theme === 'light' ? 'selected' : ''}>فاتح</option></select></div>
+
+            <!-- معلومات البرنامج -->
+            <div class="settings-section">
+                <h4>ℹ️ معلومات البرنامج</h4>
+                <div class="fg">
+                    <div class="ff full">
+                        <label>📛 اسم البرنامج</label>
+                        <input type="text" value="${settings.companyName || 'المستمر للمحاسبة وإدارة المحلات'}" readonly>
+                    </div>
+                    <div class="ff full">
+                        <label>©️ حقوق النشر</label>
+                        <input type="text" value="جميع الحقوق محفوظة" readonly>
+                    </div>
+                    <div class="ff full">
+                        <label>📞 رقم التواصل</label>
+                        <input type="text" value="0994748596" readonly>
+                    </div>
+                </div>
             </div>
-            <div style="margin-top:20px">
+
+            <!-- إعدادات النسخ الاحتياطي -->
+            <div class="settings-section">
+                <h4>💾 إعدادات النسخ الاحتياطي</h4>
+                <div class="fg">
+                    <div class="ff full">
+                        <label>📁 مسار النسخ الاحتياطي الأساسي</label>
+                        <input type="text" id="backup_path" value="${settings.backup_path || ''}" placeholder="مسار المجلد">
+                    </div>
+                    <div class="ff full">
+                        <label>📁 مسار النسخ الاحتياطي الإضافي</label>
+                        <input type="text" id="second_backup_path" value="${settings.second_backup_path || ''}" placeholder="مسار المجلد">
+                    </div>
+                    <div class="ff full">
+                        <label>
+                            <input type="checkbox" id="auto_backup" ${settings.auto_backup !== false ? 'checked' : ''}>
+                            💾 نسخ احتياطي تلقائي عند إغلاق البرنامج
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- إعدادات الفاتورة -->
+            <div class="settings-section">
+                <h4>📄 إعدادات الفاتورة</h4>
+                <div class="fg">
+                    <div class="ff full">
+                        <label>
+                            <input type="checkbox" id="print_invoice" ${settings.print_invoice !== false ? 'checked' : ''}>
+                            🖨️ طباعة الفاتورة تلقائياً بعد البيع
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- إعدادات رأس المال -->
+            <div class="settings-section">
+                <h4>💰 إعدادات رأس المال</h4>
+                <div class="fg">
+                    <div class="ff">
+                        <label>💵 رأس المال اليدوي</label>
+                        <input type="number" id="capital" value="${settings.capital || 0}">
+                    </div>
+                </div>
+            </div>
+
+            <!-- استرداد نسخة احتياطية -->
+            <div class="settings-section">
+                <h4>🔙 استرداد نسخة احتياطية</h4>
+                <div class="fg">
+                    <div class="ff full">
+                        <label>📂 استرداد من القائمة</label>
+                        <select id="backup_files">
+                            <option value="">اختر نسخة احتياطية</option>
+                        </select>
+                    </div>
+                    <div class="ff full">
+                        <button class="btn btn-ghost" onclick="loadBackupFiles()">🔄 تحديث القائمة</button>
+                    </div>
+                    <div class="ff full">
+                        <label>📂 استرداد من ملف خارجي</label>
+                        <input type="file" id="external_backup" accept=".db,.backup,.json">
+                    </div>
+                </div>
+                <div style="margin-top:15px">
+                    <button class="btn btn-warn" onclick="restoreBackup()">🔙 استرداد النسخة المحددة</button>
+                </div>
+                <div style="margin-top:10px;color:var(--danger);font-size:12px">
+                    ⚠️ تحذير: الاسترداد سيستبدل قاعدة البيانات الحالية!
+                </div>
+            </div>
+
+            <!-- أزرار الحفظ والإلغاء -->
+            <div style="margin-top:25px;display:flex;gap:10px;justify-content:flex-end">
                 <button class="btn btn-success" onclick="saveSettings()">💾 حفظ الإعدادات</button>
                 <button class="btn btn-danger" onclick="resetAllData()">🗑️ إعادة تعيين جميع البيانات</button>
             </div>
         </div>
     </div>`;
+
+    // تحميل قائمة النسخ الاحتياطية
+    loadBackupFiles();
 }
 
 function saveSettings() {
     const settings = {
-        companyName: document.getElementById('sn').value,
-        currency: document.getElementById('sc').value,
-        language: document.getElementById('sl').value,
-        theme: document.getElementById('st').value
+        companyName: document.querySelector('input[value*="المستمر"]').value,
+        currency: DB.settings.currency || 'د.أ',
+        language: DB.settings.language || 'ar',
+        theme: DB.settings.theme || 'dark',
+        backup_path: document.getElementById('backup_path').value,
+        second_backup_path: document.getElementById('second_backup_path').value,
+        auto_backup: document.getElementById('auto_backup').checked,
+        print_invoice: document.getElementById('print_invoice').checked,
+        capital: parseFloat(document.getElementById('capital').value) || 0
     };
 
     DB.saveSettings(settings);
-    toast('✅ تم حفظ الإعدادات');
+    toast('✅ تم حفظ الإعدادات بنجاح');
 }
 
 function resetAllData() {
@@ -1581,6 +1999,7 @@ function products() {
             <option value="مستعمل">مستعمل</option>
         </select>
         <button class="btn btn-success" onclick="addProduct()">+ إضافة منتج</button>
+        <button class="btn btn-danger" onclick="deleteAllProducts()">🗑️ حذف الجميع</button>
     </div>
     <div class="tw">
         <div class="th">
@@ -1616,7 +2035,9 @@ function renderProducts(products) {
             <th>الربح</th>
             <th></th>
         </tr>
-        ${products.map(p => `
+        ${products.map(p => {
+            const productJson = JSON.stringify(p);
+            return `
         <tr style="${p.quantity <= p.min_stock ? 'background:rgba(255,71,87,.08)' : ''}">
             <td>
                 <b>${p.name}</b>
@@ -1635,10 +2056,11 @@ function renderProducts(products) {
             <td>${fmt(p.selling_price)}</td>
             <td style="color:var(--accent2)">${fmt(p.selling_price - p.cost_price)}</td>
             <td style="white-space:nowrap">
-                <button class="btn btn-ghost btn-sm" onclick='eProduct(${JSON.stringify(p)})' title="تعديل">✏️</button>
+                <button class="btn btn-ghost btn-sm" onclick='eProduct(${productJson})' title="تعديل">✏️</button>
                 <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id})" title="حذف">🗑️</button>
             </td>
-        </tr>`).join('')}
+        </tr>`;
+        }).join('')}
     </table>`;
 }
 
@@ -1668,6 +2090,106 @@ function filterProducts() {
     }
 
     renderProducts(filtered);
+}
+
+function renderProducts(products) {
+    const container = document.getElementById('pt');
+
+    if (products.length === 0) {
+        container.innerHTML = em('لا توجد منتجات');
+        return;
+    }
+
+    let html = '<table style="width:100%;border-collapse:collapse">';
+    html += '<thead><tr style="background:var(--bg3)">';
+    html += '<th style="padding:12px;text-align:right;border-bottom:2px solid var(--border)">الاسم</th>';
+    html += '<th style="padding:12px;text-align:right;border-bottom:2px solid var(--border)">الماركة</th>';
+    html += '<th style="padding:12px;text-align:right;border-bottom:2px solid var(--border)">الموديل</th>';
+    html += '<th style="padding:12px;text-align:right;border-bottom:2px solid var(--border)">الفئة</th>';
+    html += '<th style="padding:12px;text-align:right;border-bottom:2px solid var(--border)">الحالة</th>';
+    html += '<th style="padding:12px;text-align:right;border-bottom:2px solid var(--border)">الكمية</th>';
+    html += '<th style="padding:12px;text-align:right;border-bottom:2px solid var(--border)">سعر الشراء</th>';
+    html += '<th style="padding:12px;text-align:right;border-bottom:2px solid var(--border)">سعر البيع</th>';
+    html += '</tr></thead><tbody>';
+
+    products.forEach(p => {
+        html += `<tr style="border-bottom:1px solid var(--border);cursor:pointer" onclick="editProduct(${p.id})">`;
+        html += `<td style="padding:12px">${p.name}</td>`;
+        html += `<td style="padding:12px">${p.brand}</td>`;
+        html += `<td style="padding:12px">${p.model || '-'}</td>`;
+        html += `<td style="padding:12px">${p.category}</td>`;
+        html += `<td style="padding:12px">${p.condition || '-'}</td>`;
+        html += `<td style="padding:12px">${p.quantity}</td>`;
+        html += `<td style="padding:12px">${fmt(p.cost_price)}</td>`;
+        html += `<td style="padding:12px">${fmt(p.selling_price)}</td>`;
+        html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+    document.getElementById('pcnt').textContent = `عدد المنتجات: ${products.length}`;
+}
+
+function editProduct(id) {
+    const product = DB.products.find(p => p.id === id);
+    if (!product) {
+        toast('⚠️ لم يتم العثور على المنتج', 'error');
+        return;
+    }
+
+    omo('✏️ تعديل منتج', `
+    <div class="fg">
+        <div class="ff full">
+            <label>اسم المنتج *</label>
+            <input id="epn" value="${product.name}">
+        </div>
+        <div class="ff">
+            <label>الماركة *</label>
+            <input id="epb" value="${product.brand}">
+        </div>
+        <div class="ff">
+            <label>الموديل</label>
+            <input id="epm" value="${product.model || ''}">
+        </div>
+        <div class="ff">
+            <label>الفئة *</label>
+            <select id="epcat">
+                <option value="موبايلات" ${product.category === 'موبايلات' ? 'selected' : ''}>موبايلات</option>
+                <option value="ملحقات" ${product.category === 'ملحقات' ? 'selected' : ''}>ملحقات</option>
+                <option value="أجهزة لوحية" ${product.category === 'أجهزة لوحية' ? 'selected' : ''}>أجهزة لوحية</option>
+                <option value="أخرى" ${product.category === 'أخرى' ? 'selected' : ''}>أخرى</option>
+            </select>
+        </div>
+        <div class="ff">
+            <label>الحالة</label>
+            <select id="epcond">
+                <option value="جديد" ${product.condition === 'جديد' ? 'selected' : ''}>جديد</option>
+                <option value="مستعمل" ${product.condition === 'مستعمل' ? 'selected' : ''}>مستعمل</option>
+                <option value="-" ${product.condition === '-' ? 'selected' : ''}>-</option>
+            </select>
+        </div>
+        <div class="ff">
+            <label>الكمية *</label>
+            <input id="epqty" type="number" value="${product.quantity}">
+        </div>
+        <div class="ff">
+            <label>سعر الشراء *</label>
+            <input id="epcp" type="number" value="${product.cost_price}">
+        </div>
+        <div class="ff">
+            <label>سعر البيع *</label>
+            <input id="epsp" type="number" value="${product.selling_price}">
+        </div>
+        <div class="ff">
+            <label>الباركود</label>
+            <input id="epbar" value="${product.barcode || ''}">
+        </div>
+        <div class="ff">
+            <label>الحد الأدنى</label>
+            <input id="epmin" type="number" value="${product.min_stock || 5}">
+        </div>
+    </div>`,
+    `<button class="btn btn-ghost" onclick="cmo()">إلغاء</button><button class="btn btn-success" onclick="saveProduct(${id})">💾 حفظ</button>`);
 }
 
 function addProduct() {
@@ -1757,6 +2279,51 @@ function saveProduct() {
 
     cmo();
     toast('✅ تم حفظ المنتج');
+    products();
+}
+
+function deleteAllProducts() {
+    const allProducts = DB.products;
+
+    if (!allProducts.length) {
+        toast('لا توجد منتجات للحذف', 'error');
+        return;
+    }
+
+    omo('🗑️ حذف جميع المنتجات', `
+        <div class="fg">
+            <div class="ff full" style="background:rgba(255,71,87,.1);border:1px solid var(--danger);border-radius:8px;padding:15px;margin-bottom:15px">
+                <p style="color:var(--danger);font-size:14px;margin:0">
+                    ⚠️ هل أنت متأكد من حذف جميع المنتجات؟
+                </p>
+                <p style="color:var(--danger);font-size:13px;margin:5px 0 0 0">
+                    عدد المنتجات: ${allProducts.length}
+                </p>
+                <p style="color:var(--danger);font-size:13px;margin:5px 0 0 0">
+                    ⚠️ هذه العملية لا يمكن التراجع عنها!
+                </p>
+            </div>
+        </div>
+    `, `
+        <button class="btn btn-ghost" onclick="cmo()">إلغاء</button>
+        <button class="btn btn-danger" onclick="confirmDeleteAllProducts()">🗑️ حذف جميع المنتجات</button>
+    `);
+}
+
+function confirmDeleteAllProducts() {
+    const allProducts = DB.products;
+
+    if (!allProducts.length) {
+        toast('لا توجد منتجات للحذف', 'error');
+        cmo();
+        return;
+    }
+
+    // حذف جميع المنتجات
+    localStorage.setItem(DB.getDBKey('products'), JSON.stringify([]));
+
+    cmo();
+    toast(`✅ تم حذف ${allProducts.length} منتج بنجاح`);
     products();
 }
 
@@ -1876,6 +2443,7 @@ async function purchases(pr='شهر'){
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       ${['أسبوع','شهر','سنة','كل الوقت'].map(p=>`<button class="btn ${p===pr?'btn-success':'btn-ghost'} btn-sm" onclick="purchasesPeriod('${p}')">${p}</button>`).join('')}
       <div style="flex:1"></div>
+      <button class="btn btn-danger" onclick="deleteAllPurchases()" style="padding:10px 15px;font-size:14px;font-weight:700">🗑️ حذف الجميع</button>
       <button class="btn btn-success" onclick="openAddPurch()" style="padding:10px 22px;font-size:15px;font-weight:700">🛒 إضافة فاتورة شراء</button>
     </div>
   </div>
@@ -2115,15 +2683,51 @@ function renderPurchCart(){
   el.innerHTML=`<table style="width:100%;border-collapse:collapse">
     <tr style="background:var(--bg3)"><th style="padding:9px 12px;text-align:right;font-size:12px;color:var(--muted)">المنتج</th><th style="padding:9px;font-size:12px;color:var(--muted)">الكمية</th><th style="padding:9px;font-size:12px;color:var(--muted)">سعر الشراء</th><th style="padding:9px;font-size:12px;color:var(--muted)">سعر البيع</th><th style="padding:9px;font-size:12px;color:var(--muted)">المجموع</th><th style="padding:9px"></th></tr>
     ${purchCart.map((item,i)=>`<tr style="border-bottom:1px solid var(--border)">
-      <td style="padding:10px 12px"><b>${item.name}</b><br><span style="font-size:11px;color:var(--muted)">${item.isNew?'🆕 منتج جديد':'📦 موجود'} | ${item.category||''}</span></td>
-      <td style="padding:10px;text-align:center">${item.quantity}</td>
-      <td style="padding:10px;text-align:center;color:var(--accent)">${fmt(item.cost_price)}</td>
-      <td style="padding:10px;text-align:center;color:var(--accent2)">${fmt(item.sell_price||0)}</td>
+      <td style="padding:10px 12px">
+        <b>${item.name}</b><br>
+        <span style="font-size:11px;color:var(--muted)">${item.isNew?'🆕 منتج جديد':'📦 موجود'} | ${item.category||''}</span>
+      </td>
+      <td style="padding:10px;text-align:center">
+        <input type="number" value="${item.quantity}" min="1" 
+          onchange="updatePurchCartItem(${i}, this.value)"
+          style="width:60px;padding:5px;border:1px solid var(--border);border-radius:5px;background:var(--bg2);color:var(--text);text-align:center;font-size:13px">
+      </td>
+      <td style="padding:10px;text-align:center">
+        <input type="number" value="${item.cost_price}" step="0.01" min="0"
+          onchange="updatePurchCartItem(${i}, 'cost', this.value)"
+          style="width:80px;padding:5px;border:1px solid var(--border);border-radius:5px;background:var(--bg2);color:var(--accent);text-align:center;font-size:13px">
+      </td>
+      <td style="padding:10px;text-align:center">
+        <input type="number" value="${item.sell_price||0}" step="0.01" min="0"
+          onchange="updatePurchCartItem(${i}, 'sell', this.value)"
+          style="width:80px;padding:5px;border:1px solid var(--border);border-radius:5px;background:var(--bg2);color:var(--accent2);text-align:center;font-size:13px">
+      </td>
       <td style="padding:10px;text-align:center;font-weight:700">${fmt(item.total)}</td>
-      <td style="padding:10px"><button onclick="removePurchCartItem(${i})" style="background:rgba(255,71,87,.15);border:none;color:var(--danger);padding:5px 10px;border-radius:5px;cursor:pointer">🗑️</button></td>
+      <td style="padding:10px">
+        <button onclick="removePurchCartItem(${i})" 
+          style="background:rgba(255,71,87,.15);border:none;color:var(--danger);padding:5px 10px;border-radius:5px;cursor:pointer">
+          🗑️
+        </button>
+      </td>
     </tr>`).join('')}
   </table>`;
   updatePurchTotals();
+}
+
+function updatePurchCartItem(index, field, value) {
+  const item = purchCart[index];
+  if (!item) return;
+
+  if (field === 'cost') {
+    item.cost_price = parseFloat(value) || 0;
+  } else if (field === 'sell') {
+    item.sell_price = parseFloat(value) || 0;
+  } else {
+    item.quantity = parseInt(value) || 1;
+  }
+
+  item.total = item.quantity * item.cost_price;
+  renderPurchCart();
 }
 
 function removePurchCartItem(i){purchCart.splice(i,1);renderPurchCart();}
@@ -2214,9 +2818,9 @@ function renderPurchasesTable(data){
       <td>${fmt(p.paid_amount)}</td>
       <td><span class="badge ${p.remaining_amount>0?'br':'bg'}">${fmt(p.remaining_amount)}</span></td>
       <td style="white-space:nowrap">
-        <button class="btn btn-ghost btn-sm" onclick="vPurch(${p.id})" title="عرض التفاصيل">👁️</button>
-        ${p.remaining_amount>0?`<button class="btn btn-warn btn-sm" onclick="payPurch(${p.id},${p.remaining_amount})">💳</button>`:''}
-        <button class="btn btn-danger btn-sm" onclick="dPurch(${p.id})">🗑️</button>
+        <button class="btn btn-primary btn-sm" onclick="showPurchaseDetails(${p.id})" title="عرض التفاصيل">📄 التفاصيل</button>
+        ${p.remaining_amount>0?`<button class="btn btn-warn btn-sm" onclick="payPurch(${p.id},${p.remaining_amount})">💳 دفع</button>`:''}
+        <button class="btn btn-danger btn-sm" onclick="dPurch(${p.id})">🗑️ حذف</button>
       </td>
     </tr>`).join('')}
   </table>`;
@@ -2236,6 +2840,189 @@ function filterPurchasesTable(){
 }
 
 function purchasesPeriod(period){purchases(period);}
+
+// دالة عرض تفاصيل فاتورة الشراء بشكل مفصل
+async function showPurchaseDetails(id){
+  const r=await api(`/api/purchases/${id}`);
+  if(!r.success){toast('خطأ في تحميل البيانات','error');return;}
+  const{purchase,details}=r.data;
+  console.log('Purchase:', purchase);
+  console.log('Details:', details);
+  console.log('Items:', purchase.items);
+
+  if(!purchase){toast('فاتورة الشراء غير موجودة','error');return;}
+  if(!purchase.invoice_number){toast('رقم الفاتورة غير موجود','error');return;}
+
+  let html=`
+  <div style="background:var(--bg3);padding:20px;border-radius:12px;margin-bottom:20px;border-left:4px solid var(--accent)">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:16px">
+      <div>
+        <div style="color:var(--muted);font-size:12px;margin-bottom:4px">🧾 رقم الفاتورة</div>
+        <div style="font-weight:700;color:var(--accent);font-size:18px">${purchase.invoice_number}</div>
+      </div>
+      <div>
+        <div style="color:var(--muted);font-size:12px;margin-bottom:4px">📅 التاريخ</div>
+        <div style="font-weight:600;font-size:16px">${purchase.purchase_date || 'لم يتم تحديده'}</div>
+      </div>
+      <div>
+        <div style="color:var(--muted);font-size:12px;margin-bottom:4px">🏢 المورد</div>
+        <div style="font-weight:600;font-size:16px">${purchase.supplier_name||'بدون مورد'}</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;padding-top:16px;border-top:1px solid var(--border)">
+      <div style="padding:12px;background:rgba(0,212,255,.1);border-radius:8px">
+        <div style="color:var(--muted);font-size:11px;margin-bottom:4px">💰 الإجمالي</div>
+        <div style="font-weight:700;color:var(--accent);font-size:20px">${fmt(purchase.total_amount)}</div>
+      </div>
+      <div style="padding:12px;background:rgba(0,255,157,.1);border-radius:8px">
+        <div style="color:var(--muted);font-size:11px;margin-bottom:4px">✅ المدفوع</div>
+        <div style="font-weight:700;color:var(--accent2);font-size:20px">${fmt(purchase.paid_amount)}</div>
+      </div>
+      <div style="padding:12px;background:rgba(${purchase.remaining_amount>0?'255,71,87':'0,255,157'},.1);border-radius:8px">
+        <div style="color:var(--muted);font-size:11px;margin-bottom:4px">⏳ المتبقي</div>
+        <div style="font-weight:700;color:${purchase.remaining_amount>0?'var(--danger)':'var(--accent2)'};font-size:20px">${fmt(purchase.remaining_amount)}</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px">
+    <div style="padding:16px;background:var(--bg3);border-bottom:1px solid var(--border);font-weight:700;color:var(--accent);font-size:16px">📦 المنتجات (${details.length})</div>
+    <table style="width:100%;margin:0">
+      <tr style="background:var(--bg3)">
+        <th style="padding:12px;text-align:right;font-size:13px">🏷️ المنتج</th>
+        <th style="padding:12px;font-size:13px">📊 الكمية</th>
+        <th style="padding:12px;font-size:13px">💵 سعر الشراء</th>
+        <th style="padding:12px;font-size:13px">💵 سعر البيع</th>
+        <th style="padding:12px;font-size:13px">🧮 الإجمالي</th>
+        <th style="padding:12px;font-size:13px">✏️ تعديل</th>
+      </tr>
+      ${details.map(d=>{
+        const product = DB.products.find(p => p.id === d.product_id);
+        return `
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:14px;border-bottom:1px solid var(--border)">
+          <b style="color:var(--accent);font-size:15px">${product?.name || d.product_name || 'غير معروف'}</b>
+        </td>
+        <td style="padding:14px;border-bottom:1px solid var(--border);text-align:center;color:var(--accent2);font-weight:700;font-size:15px">${d.quantity}</td>
+        <td style="padding:14px;border-bottom:1px solid var(--border);text-align:center;font-size:15px">${fmt(d.unit_price)}</td>
+        <td style="padding:14px;border-bottom:1px solid var(--border);text-align:center;font-size:15px">${fmt(d.sell_price || 0)}</td>
+        <td style="padding:14px;border-bottom:1px solid var(--border);text-align:center;color:var(--accent2);font-weight:700;font-size:15px">${fmt(d.total_price)}</td>
+        <td style="padding:14px;border-bottom:1px solid var(--border)">
+          <button onclick="editPurchaseItem(${purchase.id}, ${d.id})"
+            style="background:rgba(0,212,255,.15);border:none;color:var(--accent);padding:6px 12px;border-radius:5px;cursor:pointer;font-size:13px">
+            ✏️
+          </button>
+        </td>
+      </tr>`
+      }).join('')}
+    </table>
+  </div>`;
+
+  console.log('Before omo - title:', `📋 تفاصيل فاتورة الشراء: ${purchase.invoice_number}`);
+  console.log('Before omo - html:', html);
+  const payButton = purchase.remaining_amount>0?`<button class="btn btn-warn" onclick="payPurch(${id},${purchase.remaining_amount})">💳 تسجيل دفعة</button>`:'';
+  omo(`📋 تفاصيل فاتورة الشراء: ${purchase.invoice_number}`, html,
+  `${payButton}
+  <button class="btn btn-danger" onclick="if(confirm('⚠️ هل أنت متأكد من حذف هذه الفاتورة؟\n\nسيتم حذف الفاتورة وكل البيانات المرتبطة بها')) dPurch(${id})">🗑️ حذف الفاتورة</button>
+  <button class="btn btn-ghost" onclick="cmo()">✖️ إغلاق</button>`);
+}
+
+// دالة تعديل منتج في فاتورة الشراء
+function editPurchaseItem(purchaseId, itemId) {
+  const purchase = purchasesData.find(p => p.id === purchaseId);
+  if (!purchase) return;
+
+  const details = purchase.items || [];
+  const item = details.find(d => d.id === itemId);
+  if (!item) return;
+
+  // إنشاء نافذة تعديل
+  const overlay = document.createElement('div');
+  overlay.id = 'edit-purchase-item-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:400;display:flex;align-items:center;justify-content:center;padding:16px';
+
+  overlay.innerHTML = `
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;width:100%;max-width:500px;padding:24px">
+      <h3 style="margin:0 0 20px;color:var(--accent)">✏️ تعديل المنتج</h3>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div>
+          <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">الكمية</label>
+          <input type="number" id="edit-item-qty" value="${item.quantity}" min="1" 
+            style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:10px 12px;color:var(--text);font-size:14px">
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">سعر الشراء</label>
+          <input type="number" id="edit-item-cost" value="${item.unit_price}" step="0.01" min="0"
+            style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:10px 12px;color:var(--accent);font-size:14px">
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">سعر البيع</label>
+          <input type="number" id="edit-item-sell" value="${item.sell_price || 0}" step="0.01" min="0"
+            style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:10px 12px;color:var(--accent2);font-size:14px">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+        <button onclick="document.getElementById('edit-purchase-item-overlay').remove()" 
+          style="padding:10px 20px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);cursor:pointer;font-family:Cairo,sans-serif">
+          إلغاء
+        </button>
+        <button onclick="saveEditedPurchaseItem(${purchaseId}, ${itemId})" 
+          style="padding:10px 24px;background:var(--accent2);color:#0f1923;border:none;border-radius:7px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif">
+          💾 حفظ التعديلات
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+}
+
+// دالة حفظ التعديلات على منتج في فاتورة الشراء
+async function saveEditedPurchaseItem(purchaseId, itemId) {
+  const qty = parseInt(document.getElementById('edit-item-qty').value) || 1;
+  const cost = parseFloat(document.getElementById('edit-item-cost').value) || 0;
+  const sell = parseFloat(document.getElementById('edit-item-sell').value) || 0;
+
+  if (qty <= 0) {
+    toast('الكمية يجب أن تكون أكبر من صفر', 'error');
+    return;
+  }
+
+  // تحديث البيانات
+  const purchase = purchasesData.find(p => p.id === purchaseId);
+  if (!purchase) return;
+
+  const details = purchase.items || [];
+  const itemIndex = details.findIndex(d => d.id === itemId);
+
+  if (itemIndex !== -1) {
+    details[itemIndex].quantity = qty;
+    details[itemIndex].unit_price = cost;
+    details[itemIndex].sell_price = sell;
+    details[itemIndex].total_price = qty * cost;
+
+    // إعادة حساب الإجمالي
+    purchase.total_amount = details.reduce((sum, d) => sum + d.total_price, 0);
+    purchase.remaining_amount = purchase.total_amount - purchase.paid_amount;
+
+    // حفظ التعديلات
+    const r = await api(`/api/purchases/${purchaseId}`, 'PUT', {
+      supplier_id: purchase.supplier_id,
+      paid_amount: purchase.paid_amount,
+      items: details
+    });
+
+    if (r.success) {
+      document.getElementById('edit-purchase-item-overlay').remove();
+      toast('✅ تم تحديث المنتج');
+      showPurchaseDetails(purchaseId);
+    } else {
+      toast(r.message || 'حدث خطأ أثناء التحديث', 'error');
+    }
+  } else {
+    toast('المنتج غير موجود', 'error');
+  }
+}
 
 async function vPurch(id){
   const r=await api(`/api/purchases/${id}`);
@@ -2261,8 +3048,9 @@ async function vPurch(id){
       ${details.map(d=>`<tr><td style="padding:10px;border-bottom:1px solid var(--border)"><b style="color:var(--accent)">${d.product_name}</b></td><td style="padding:10px;border-bottom:1px solid var(--border);text-align:center;color:var(--accent2);font-weight:700">${d.quantity}</td><td style="padding:10px;border-bottom:1px solid var(--border);text-align:center">${fmt(d.unit_price)}</td><td style="padding:10px;border-bottom:1px solid var(--border);text-align:center;color:var(--accent2);font-weight:700">${fmt(d.total_price)}</td></tr>`).join('')}
     </table>
   </div>`;
+  const payButton2 = purchase.remaining_amount>0?`<button class="btn btn-warn" onclick="payPurch(${id},${purchase.remaining_amount})">💳 دفعة</button>`:'';
   omo(`📋 فاتورة شراء: ${purchase.invoice_number}`,html,
-  `${purchase.remaining_amount>0?`<button class="btn btn-warn" onclick="payPurch(${id},${purchase.remaining_amount})">💳 دفعة</button>`:''}
+  `${payButton2}
   <button class="btn btn-danger" onclick="if(confirm('هل تريد حذف هذه الفاتورة؟')) dPurch(${id})">🗑️ حذف</button>
   <button class="btn btn-ghost" onclick="cmo()">✖️ إغلاق</button>`);
 }
@@ -2286,98 +3074,6 @@ async function dPurch(id){
   const r=await api(`/api/purchases/${id}`,'DELETE');
   if(r.success){toast('✅ تم الحذف');purchases('شهر');}else toast(r.message,'error');
 }
-
-function quickAddSupplierInline(){
-  const div=document.createElement('div');
-  div.id='quick-sup-popup';
-  div.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;display:flex;align-items:center;justify-content:center';
-  div.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:24px;width:400px;max-width:95vw">
-    <h3 style="margin:0 0 16px;color:var(--accent)">➕ إضافة مورد جديد</h3>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-      <div><label style="font-size:12px;color:var(--muted)">الاسم *</label><input id="qsn" style="width:100%;margin-top:5px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-size:14px"></div>
-      <div><label style="font-size:12px;color:var(--muted)">الهاتف</label><input id="qsp" style="width:100%;margin-top:5px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-size:14px"></div>
-    </div>
-    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
-      <button onclick="document.getElementById('quick-sup-popup').remove()" style="padding:9px 18px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);cursor:pointer;font-family:Cairo,sans-serif">إلغاء</button>
-      <button onclick="saveQuickSupplier()" style="padding:9px 20px;background:var(--accent2);color:#0f1923;border:none;border-radius:7px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif">💾 حفظ</button>
-    </div>
-  </div>`;
-  document.body.appendChild(div);
-  setTimeout(()=>document.getElementById('qsn')?.focus(),100);
-}
-
-async function saveQuickSupplier(){
-  const name=document.getElementById('qsn')?.value.trim();
-  const phone=document.getElementById('qsp')?.value.trim()||'';
-  if(!name){toast('أدخل اسم المورد','error');return;}
-  const r=await api('/api/suppliers/add','POST',{name,phone,email:'',address:''});
-  if(r.success){
-    document.getElementById('quick-sup-popup')?.remove();
-    toast('✅ تم إضافة المورد');
-    // refresh supplier dropdown
-    const sr=await api('/api/suppliers');
-    purchSups=sr.data||[];
-    const sel=document.getElementById('pu-sup');
-    if(sel){
-      const cur=sel.value;
-      sel.innerHTML=`<option value="">— بدون مورد —</option>${purchSups.map(s=>`<option value="${s.id}">${s.name}${s.phone?' ('+s.phone+')':''}</option>`).join('')}`;
-      // select newly added
-      if(r.data?.id) sel.value=r.data.id;
-      else sel.value=cur;
-    }
-  }else toast(r.message,'error');
-}
-
-function closePurchOverlay(){document.getElementById('purch-overlay')?.remove();}
-
-function switchPurchTab(tab){
-  const isExist=tab==='exist';
-  document.getElementById('purch-tab-exist').style.display=isExist?'block':'none';
-  document.getElementById('purch-tab-new').style.display=isExist?'none':'block';
-  document.getElementById('tab-exist').style.cssText=`padding:9px 20px;border:none;border-bottom:3px solid ${isExist?'var(--accent)':'transparent'};background:${isExist?'rgba(0,212,255,.08)':'none'};color:${isExist?'var(--accent)':'var(--muted)'};font-family:Cairo,sans-serif;font-size:14px;font-weight:${isExist?700:600};cursor:pointer;border-radius:8px 8px 0 0`;
-  document.getElementById('tab-new').style.cssText=`padding:9px 20px;border:none;border-bottom:3px solid ${!isExist?'var(--accent)':'transparent'};background:${!isExist?'rgba(0,212,255,.08)':'none'};color:${!isExist?'var(--accent)':'var(--muted)'};font-family:Cairo,sans-serif;font-size:14px;font-weight:${!isExist?700:600};cursor:pointer;border-radius:8px 8px 0 0`;
-}
-
-function togglePurchCondition(){
-  const cat=document.getElementById('pu-new-cat')?.value;
-  const wrap=document.getElementById('pu-cond-wrap');
-  if(wrap) wrap.style.display=cat==='موبايلات'?'block':'none';
-}
-
-function updatePurchTotals(){
-  const total=purchCart.reduce((s,i)=>s+i.total,0);
-  const paid=parseFloat(document.getElementById('pu-paid')?.value)||0;
-  const rem=document.getElementById('pu-remaining');
-  if(rem) rem.textContent=fmt(Math.max(0,total-paid));
-  if(rem) rem.style.color=total-paid>0?'var(--warn)':'var(--accent2)';
-  const el=document.getElementById('pu-total');
-  if(el) el.textContent=fmt(total);
-}
-
-function renderPurchCart(){
-  const el=document.getElementById('pu-cart-table');
-  if(!el)return;
-  const cnt=document.getElementById('pu-cart-cnt');
-  if(cnt) cnt.textContent=purchCart.length+' منتج';
-  if(!purchCart.length){
-    el.innerHTML=`<div style="text-align:center;padding:28px;color:var(--muted)">📭 لم تُضف أي منتجات بعد</div>`;
-    updatePurchTotals();return;
-  }
-  el.innerHTML=`<table style="width:100%;border-collapse:collapse">
-    <tr style="background:var(--bg3)"><th style="padding:9px 12px;text-align:right;font-size:12px;color:var(--muted)">المنتج</th><th style="padding:9px;font-size:12px;color:var(--muted)">الكمية</th><th style="padding:9px;font-size:12px;color:var(--muted)">سعر الشراء</th><th style="padding:9px;font-size:12px;color:var(--muted)">سعر البيع</th><th style="padding:9px;font-size:12px;color:var(--muted)">المجموع</th><th style="padding:9px"></th></tr>
-    ${purchCart.map((item,i)=>`<tr style="border-bottom:1px solid var(--border)">
-      <td style="padding:10px 12px"><b>${item.name}</b><br><span style="font-size:11px;color:var(--muted)">${item.isNew?'🆕 منتج جديد':'📦 موجود'} | ${item.category||''}</span></td>
-      <td style="padding:10px;text-align:center">${item.quantity}</td>
-      <td style="padding:10px;text-align:center;color:var(--accent)">${fmt(item.cost_price)}</td>
-      <td style="padding:10px;text-align:center;color:var(--accent2)">${fmt(item.sell_price||0)}</td>
-      <td style="padding:10px;text-align:center;font-weight:700">${fmt(item.total)}</td>
-      <td style="padding:10px"><button onclick="removePurchCartItem(${i})" style="background:rgba(255,71,87,.15);border:none;color:var(--danger);padding:5px 10px;border-radius:5px;cursor:pointer">🗑️</button></td>
-    </tr>`).join('')}
-  </table>`;
-  updatePurchTotals();
-}
-
-function removePurchCartItem(i){purchCart.splice(i,1);renderPurchCart();}
 
 function addExistToPurchCart(){
   const name=document.getElementById('pu-prod-search').value.trim();
@@ -2551,8 +3247,11 @@ async function suppliers(){
   const r=await api('/api/suppliers');
   document.getElementById('supt').innerHTML=r.data?.length
     ?`<table><tr><th>الاسم</th><th>الهاتف</th><th>البريد</th><th>العنوان</th><th></th></tr>
-    ${r.data.map(s=>`<tr><td><b>${s.name}</b></td><td>${s.phone}</td><td>${s.email||'—'}</td><td>${s.address||'—'}</td>
-    <td><button class="btn btn-ghost btn-sm" onclick='eSup(${JSON.stringify(s)})'>✏️</button> <button class="btn btn-danger btn-sm" onclick="dSup(${s.id})">🗑️</button></td></tr>`).join('')}</table>`:em();
+    ${r.data.map(s=>{
+      const supplierJson = JSON.stringify(s);
+      return `<tr><td><b>${s.name}</b></td><td>${s.phone}</td><td>${s.email||'—'}</td><td>${s.address||'—'}</td>
+    <td><button class="btn btn-ghost btn-sm" onclick='eSup(${supplierJson})'>✏️</button> <button class="btn btn-danger btn-sm" onclick="dSup(${s.id})">🗑️</button></td></tr>`;
+    }).join('')}</table>`:em();
 }
 function addSup(){omo('➕ مورد جديد',`<div class="fg"><div class="ff"><label>الاسم *</label><input id="sn"></div><div class="ff"><label>الهاتف *</label><input id="sph"></div><div class="ff"><label>البريد</label><input id="se"></div><div class="ff"><label>العنوان</label><input id="sa"></div></div>`,`<button class="btn btn-ghost" onclick="cmo()">إلغاء</button><button class="btn btn-success" onclick="svSup()">💾 حفظ</button>`);}
 async function svSup(){const r=await api('/api/suppliers/add','POST',{name:document.getElementById('sn').value,phone:document.getElementById('sph').value,email:document.getElementById('se').value,address:document.getElementById('sa').value});if(r.success){cmo();toast(r.message);suppliers();}else toast(r.message,'error');}
@@ -2621,7 +3320,10 @@ async function maintenance(sf='',sq=''){
 
   document.getElementById('mt').innerHTML=data.length
     ?`<div style="overflow-x:auto"><table style="width:100%"><tr><th>العميل</th><th>الهاتف</th><th>الجهاز</th><th>المشكلة</th><th>التكلفة</th><th>السعر الإجمالي</th><th>الربح</th><th>الحالة</th><th>تاريخ الاستلام</th><th></th></tr>
-    ${data.map(m=>{const profit=(m.selling_price||0)-(m.cost||0);return`<tr>
+    ${data.map(m=>{
+      const profit=(m.selling_price||0)-(m.cost||0);
+      const maintJson = JSON.stringify(m);
+      return `<tr>
     <td><b>${m.customer_name}</b></td><td>${m.phone}</td><td>${m.device_model}</td>
     <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${m.problem_description||''}">${m.problem_description||'—'}</td>
     <td>${fmt(m.cost)}</td>
@@ -2630,10 +3332,11 @@ async function maintenance(sf='',sq=''){
     <td><span class="badge ${m.status==='جاهز'?'bg':m.status==='تم التسليم'?'bb':'bw'}">${m.status}</span></td>
     <td style="font-size:11px;color:var(--muted)">${m.received_date||'—'}</td>
     <td style="white-space:nowrap">
-      <button class="btn btn-ghost btn-sm" title="تفاصيل" onclick='vMaint(${JSON.stringify(m)})'>👁️</button>
-      <button class="btn btn-ghost btn-sm" onclick='upMaint(${JSON.stringify(m)})'>✏️</button>
+      <button class="btn btn-ghost btn-sm" title="تفاصيل" onclick='vMaint(${maintJson})'>👁️</button>
+      <button class="btn btn-ghost btn-sm" onclick='upMaint(${maintJson})'>✏️</button>
       <button class="btn btn-danger btn-sm" onclick="dMaint(${m.id})">🗑️</button>
-    </td></tr>`;}).join('')}</table></div>`
+    </td></tr>`;
+    }).join('')}</table></div>`
     :em('لا توجد طلبات صيانة');
 }
 
@@ -2703,14 +3406,1565 @@ async function confirmClearAllMaint(){
 function addMaint(){omo('➕ طلب صيانة',`<div class="fg"><div class="ff"><label>العميل *</label><input id="mc"></div><div class="ff"><label>الهاتف *</label><input id="mph"></div><div class="ff full"><label>الجهاز *</label><input id="md"></div><div class="ff full"><label>المشكلة</label><textarea id="mp"></textarea></div><div class="ff"><label>التكلفة (تكلفة الإصلاح)</label><input id="mcost" type="number" value="0" oninput="autoMaintPrice()"></div><div class="ff"><label>السعر الإجمالي (للعميل)</label><input id="msp" type="number" value="0" placeholder="السعر المطلوب من العميل"></div></div><div style="background:rgba(0,212,255,.08);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:10px;font-size:12px;color:var(--muted)">💡 التكلفة = تكلفة قطع الغيار والعمالة | السعر الإجمالي = السعر المطلوب من العميل</div>`,`<button class="btn btn-ghost" onclick="cmo()">إلغاء</button><button class="btn btn-success" onclick="svMaint()">💾 حفظ</button>`);}
 function autoMaintPrice(){const c=parseFloat(document.getElementById('mcost')?.value)||0;const sp=document.getElementById('msp');if(sp&&(parseFloat(sp.value)||0)===0)sp.value=c;}
 async function svMaint(){const r=await api('/api/maintenance/add','POST',{customer_name:document.getElementById('mc').value,phone:document.getElementById('mph').value,device_model:document.getElementById('md').value,problem_description:document.getElementById('mp').value,cost:document.getElementById('mcost').value,selling_price:document.getElementById('msp').value||0,received_time:new Date().toTimeString().slice(0,5)});if(r.success){cmo();toast(r.message);maintenance();}else toast(r.message,'error');}
-function upMaint(m){omo('✏️ تحديث',`<div class="fg"><div class="ff full"><label>الحالة</label><select id="ums"><option ${m.status==='قيد الإصلاح'?'selected':''}>قيد الإصلاح</option><option ${m.status==='جاهز'?'selected':''}>جاهز</option><option ${m.status==='تم التسليم'?'selected':''}>تم التسليم</option></select></div><div class="ff"><label>التكلفة</label><input id="umc" type="number" value="${m.cost}" oninput="autoMaintPriceUp()"></div><div class="ff"><label>السعر الإجمالي (للعميل)</label><input id="umsp" type="number" value="${m.selling_price||m.cost||0}"></div></div>`,`<button class="btn btn-ghost" onclick="cmo()">إلغاء</button><button class="btn btn-success" onclick="sbUpMaint(${m.id})">💾 حفظ</button>`);}
+function upMaint(m){
+  const maintJson = JSON.stringify(m);
+  omo('✏️ تحديث',`<div class="fg"><div class="ff full"><label>الحالة</label><select id="ums"><option ${m.status==='قيد الإصلاح'?'selected':''}>قيد الإصلاح</option><option ${m.status==='جاهز'?'selected':''}>جاهز</option><option ${m.status==='تم التسليم'?'selected':''}>تم التسليم</option></select></div><div class="ff"><label>التكلفة</label><input id="umc" type="number" value="${m.cost}" oninput="autoMaintPriceUp()"></div><div class="ff"><label>السعر الإجمالي (للعميل)</label><input id="umsp" type="number" value="${m.selling_price||m.cost||0}"></div></div>`,`<button class="btn btn-ghost" onclick="cmo()">إلغاء</button><button class="btn btn-success" onclick="sbUpMaint(${m.id})">💾 حفظ</button>`);}
 function autoMaintPriceUp(){const c=parseFloat(document.getElementById('umc')?.value)||0;const sp=document.getElementById('umsp');if(sp&&(parseFloat(sp.value)||0)===0)sp.value=c;}
 async function sbUpMaint(id){const r=await api(`/api/maintenance/${id}`,'PUT',{status:document.getElementById('ums').value,cost:document.getElementById('umc').value,selling_price:document.getElementById('umsp')?.value||0});if(r.success){cmo();toast(r.message);maintenance();}else toast(r.message,'error');}
 async function dMaint(id){if(!confirm('حذف؟'))return;const r=await api(`/api/maintenance/${id}`,'DELETE');if(r.success){toast(r.message);maintenance();}else toast(r.message,'error');}
 
 function reports() {
     const c = document.getElementById('pc');
-    c.innerHTML = `<div class="tw"><div class="th"><h3>📈 التقارير</h3></div><div style="padding:20px">✅ قسم التقارير - جاهز للاستخدام</div></div>`;
+    c.innerHTML = `
+    <div class="tw">
+        <div class="th">
+            <h3>📈 التقارير</h3>
+        </div>
+
+        <!-- تبويبات التقارير -->
+        <div class="tabs" style="margin: 20px;">
+            <div class="tab active" onclick="switchReportTab('sales', this)">📊 تقارير المبيعات</div>
+            <div class="tab" onclick="switchReportTab('inventory', this)">📦 تقارير المخزون</div>
+            <div class="tab" onclick="switchReportTab('financial', this)">💰 التقارير المالية</div>
+        </div>
+
+        <!-- محتوى تبويب المبيعات -->
+        <div id="sales-tab" class="report-tab-content">
+            <div style="padding: 20px;">
+                <!-- فلاتر المبيعات -->
+                <div style="background: var(--bg2); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end;">
+                        <div class="ff">
+                            <label>📅 الفترة</label>
+                            <select id="sales-period" class="rin" onchange="updateSalesReport()">
+                                <option value="today">اليوم</option>
+                                <option value="week">أسبوع</option>
+                                <option value="month" selected>شهر</option>
+                                <option value="quarter">ربع سنة</option>
+                                <option value="year">سنة</option>
+                                <option value="all">كل الوقت</option>
+                            </select>
+                        </div>
+                        <div class="ff">
+                            <label>🔍 البحث</label>
+                            <input type="text" id="sales-search" class="rin" placeholder="رقم الفاتورة، المنتج، المستخدم..." oninput="updateSalesReport()">
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-primary" onclick="updateSalesReport()">👁️ عرض التقرير</button>
+                            <button class="btn btn-ghost" onclick="printSalesReport()">🖨️ طباعة</button>
+                            <button class="btn btn-success" onclick="exportSalesReport()">📊 Excel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- منطقة عرض تقرير المبيعات -->
+                <div id="sales-report-content" style="background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 20px; min-height: 400px;">
+                    <div style="text-align: center; color: var(--muted); padding: 60px 20px;">
+                        <div style="font-size: 48px; margin-bottom: 20px;">📊</div>
+                        <p style="font-size: 18px;">اختر الفترة واضغط على "عرض التقرير"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- محتوى تبويب المخزون -->
+        <div id="inventory-tab" class="report-tab-content" style="display: none;">
+            <div style="padding: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                    <button class="btn btn-primary" onclick="showCurrentInventoryReport()" style="height: 60px;">
+                        📊 المخزون الحالي
+                    </button>
+                    <button class="btn btn-warn" onclick="showLowStockReport()" style="height: 60px;">
+                        ⚠️ المخزون المنخفض
+                    </button>
+                    <button class="btn btn-danger" onclick="showOutOfStockReport()" style="height: 60px;">
+                        ❌ المخزون المنتهي
+                    </button>
+                    <button class="btn btn-ghost" onclick="showInventoryByCategoryReport()" style="height: 60px;">
+                        📈 المخزون حسب الفئة
+                    </button>
+                    <button class="btn btn-success" onclick="showInventoryValueReport()" style="height: 60px;">
+                        💰 قيمة المخزون والرأسمال
+                    </button>
+                </div>
+
+                <div id="inventory-report-content" style="background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 20px; min-height: 400px;">
+                    <div style="text-align: center; color: var(--muted); padding: 60px 20px;">
+                        <div style="font-size: 48px; margin-bottom: 20px;">📦</div>
+                        <p style="font-size: 18px;">اختر نوع تقرير المخزون</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- محتوى تبويب التقارير المالية -->
+        <div id="financial-tab" class="report-tab-content" style="display: none;">
+            <div style="padding: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                    <button class="btn btn-primary" onclick="showProfitReport()" style="height: 60px;">
+                        💹 تقارير الأرباح
+                    </button>
+                    <button class="btn btn-danger" onclick="showExpensesReport()" style="height: 60px;">
+                        💸 تقارير المصاريف
+                    </button>
+                    <button class="btn btn-success" onclick="showPurchasesReport()" style="height: 60px;">
+                        🛒 تقارير المشتريات
+                    </button>
+                </div>
+
+                <div id="financial-report-content" style="background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 20px; min-height: 400px;">
+                    <div style="text-align: center; color: var(--muted); padding: 60px 20px;">
+                        <div style="font-size: 48px; margin-bottom: 20px;">💰</div>
+                        <p style="font-size: 18px;">اختر نوع التقرير المالي</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+
+// دالة التبديل بين تبويبات التقارير
+function switchReportTab(tabName, element) {
+    // إخفاء جميع محتويات التبويبات
+    document.querySelectorAll('.report-tab-content').forEach(tab => {
+        tab.style.display = 'none';
+    });
+
+    // إزالة الكلاس active من جميع التبويبات
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+
+    // إظهار التبويب المحدد
+    document.getElementById(tabName + '-tab').style.display = 'block';
+    element.classList.add('active');
+}
+
+// دالة تحديث تقرير المبيعات مع الفلترة والبحث
+function updateSalesReport() {
+    const period = document.getElementById('sales-period').value;
+    const searchText = document.getElementById('sales-search').value.toLowerCase().trim();
+    const reportContent = document.getElementById('sales-report-content');
+
+    reportContent.innerHTML = '<div style="text-align: center; padding: 40px;"><div class="spin"></div><p>جاري تحميل تقرير المبيعات...</p></div>';
+
+    setTimeout(() => {
+        let sales = [...(DB.sales || [])];
+
+        // تطبيق الفلترة حسب الفترة
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+
+        sales = sales.filter(sale => {
+            if (period === 'today') {
+                return sale.sale_date === todayStr;
+            } else if (period === 'week') {
+                const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+                return new Date(sale.sale_date) >= weekAgo;
+            } else if (period === 'month') {
+                const monthAgo = new Date(today.getFullYear(), today.getMonth(), 1);
+                return new Date(sale.sale_date) >= monthAgo;
+            } else if (period === 'quarter') {
+                const quarterAgo = new Date(today.getTime() - 90 * 24 * 60 * 60 * 1000);
+                return new Date(sale.sale_date) >= quarterAgo;
+            } else if (period === 'year') {
+                const yearAgo = new Date(today.getFullYear(), 0, 1);
+                return new Date(sale.sale_date) >= yearAgo;
+            }
+            return true;
+        });
+
+        // تطبيق البحث
+        if (searchText) {
+            sales = sales.filter(sale => {
+                const invoiceMatch = sale.invoice_number.toLowerCase().includes(searchText);
+                const userMatch = (sale.username || '').toLowerCase().includes(searchText);
+                const productMatch = sale.items && sale.items.some(item => {
+                    const product = DB.products.find(p => p.id === item.product_id);
+                    return product && product.name.toLowerCase().includes(searchText);
+                });
+                return invoiceMatch || userMatch || productMatch;
+            });
+        }
+
+        // ترتيب النتائج حسب التاريخ
+        sales.sort((a, b) => new Date(b.sale_date) - new Date(a.sale_date));
+
+        const totalSales = sales.reduce((sum, s) => sum + s.total_amount, 0);
+        const totalProfit = sales.reduce((sum, s) => sum + (s.profit || 0), 0);
+        const avgSale = sales.length > 0 ? totalSales / sales.length : 0;
+
+        let html = `
+            <div style="margin-bottom: 25px;">
+                <h3 style="color: var(--accent); margin-bottom: 15px;">💰 تقرير المبيعات - ${getPeriodText(period)}</h3>
+
+                <!-- بطاقات الملخص -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">إجمالي المبيعات</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--accent);">${fmt(totalSales)}</div>
+                    </div>
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">إجمالي الأرباح</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--accent2);">${fmt(totalProfit)}</div>
+                    </div>
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">عدد الفواتير</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--text);">${sales.length}</div>
+                    </div>
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">متوسط قيمة الفاتورة</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--warn);">${fmt(avgSale)}</div>
+                    </div>
+                </div>
+
+                <!-- جدول المبيعات -->
+                <div style="background: var(--bg2); border-radius: 10px; overflow: hidden; border: 1px solid var(--border);">
+                    <div style="padding: 15px; border-bottom: 1px solid var(--border); background: var(--bg3);">
+                        <h4 style="margin: 0; color: var(--text);">تفاصيل المبيعات</h4>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: var(--bg3);">
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">رقم الفاتورة</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">التاريخ</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">الوقت</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">المستخدم</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">المبلغ</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">الربح</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${sales.map(sale => `
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 12px;">${sale.invoice_number}</td>
+                                        <td style="padding: 12px;">${sale.sale_date}</td>
+                                        <td style="padding: 12px;">${sale.sale_time || '-'}</td>
+                                        <td style="padding: 12px;">${sale.username || '-'}</td>
+                                        <td style="padding: 12px; color: var(--accent); font-weight: bold;">${fmt(sale.total_amount)}</td>
+                                        <td style="padding: 12px; color: var(--accent2); font-weight: bold;">${fmt(sale.profit || 0)}</td>
+                                        <td style="padding: 12px; white-space: nowrap;">
+                                            <button class="btn btn-primary" style="padding: 5px 10px; font-size: 12px;" onclick="showSaleDetails(${sale.id})">📄 التفاصيل</button>
+                                            <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="deleteAndReturnSale(${sale.id})">🗑️ حذف وإعادة</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        reportContent.innerHTML = html;
+    }, 500);
+}
+
+// دالة الحصول على نص الفترة
+function getPeriodText(period) {
+    const periodTexts = {
+        'today': 'اليوم',
+        'week': 'أسبوع',
+        'month': 'شهر',
+        'quarter': 'ربع سنة',
+        'year': 'سنة',
+        'all': 'كل الوقت'
+    };
+    return periodTexts[period] || period;
+}
+
+// دالة عرض تفاصيل الفاتورة
+function showSaleDetails(saleId) {
+    const sale = DB.sales.find(s => s.id === saleId);
+    if (!sale || !sale.items || !Array.isArray(sale.items)) {
+        toast('خطأ في تحميل بيانات الفاتورة', 'error');
+        return;
+    }
+
+    const products = sale.items.map(item => {
+        const product = DB.products.find(p => p.id === item.product_id);
+        return {
+            ...product,
+            quantity: item.quantity,
+            totalPrice: item.quantity * item.unit_price
+        };
+    });
+
+    let html = `
+        <div style="padding: 20px;">
+            <h3 style="color: var(--accent); margin-bottom: 20px;">📄 تفاصيل الفاتورة ${sale.invoice_number}</h3>
+
+            <div style="background: var(--bg2); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                    <div>
+                        <div style="font-size: 12px; color: var(--muted);">التاريخ:</div>
+                        <div style="font-size: 16px; font-weight: bold;">${sale.sale_date}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: var(--muted);">الوقت:</div>
+                        <div style="font-size: 16px; font-weight: bold;">${sale.sale_time || '-'}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: var(--muted);">المستخدم:</div>
+                        <div style="font-size: 16px; font-weight: bold;">${sale.username || '-'}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: var(--muted);">طريقة الدفع:</div>
+                        <div style="font-size: 16px; font-weight: bold;">${sale.payment_method || '-'}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: var(--bg2); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <h4 style="margin-bottom: 15px; color: var(--text);">المنتجات</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: var(--bg3);">
+                            <th style="padding: 10px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted);">المنتج</th>
+                            <th style="padding: 10px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted);">الكمية</th>
+                            <th style="padding: 10px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted);">سعر الوحدة</th>
+                            <th style="padding: 10px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted);">الإجمالي</th>
+                            <th style="padding: 10px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted);">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sale.items.map((item, index) => {
+                            const product = DB.products.find(p => p.id === item.product_id);
+                            return `
+                            <tr style="border-bottom: 1px solid var(--border);">
+                                <td style="padding: 10px;">${product?.name || item.name || 'غير معروف'}</td>
+                                <td style="padding: 10px;">${item.quantity}</td>
+                                <td style="padding: 10px;">${fmt(item.unit_price || item.price)}</td>
+                                <td style="padding: 10px; font-weight: bold;">${fmt(item.total_price || (item.quantity * (item.unit_price || item.price)))}</td>
+                                <td style="padding: 10px;">
+                                    <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="deleteAndReturnItem(${sale.id}, ${index})">🗑️ حذف وإعادة</button>
+                                </td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="background: var(--bg3); padding: 20px; border-radius: 10px; text-align: left;">
+                <div style="font-size: 14px; color: var(--muted);">المبلغ الإجمالي:</div>
+                <div style="font-size: 28px; font-weight: bold; color: var(--accent);">${fmt(sale.total_amount)}</div>
+                <div style="font-size: 14px; color: var(--accent2); margin-top: 10px;">الربح: ${fmt(sale.profit || 0)}</div>
+            </div>
+        </div>
+    `;
+
+    omo('📄 تفاصيل الفاتورة', html, `
+        <button class="btn btn-ghost" onclick="cmo()">إغلاق</button>
+        <button class="btn btn-primary" onclick="printSaleDetails(${saleId})">🖨️ طباعة</button>
+    `);
+}
+
+// دالة إعادة الفاتورة إلى المخزون
+function returnSaleToInventory(saleId) {
+    const sale = DB.sales.find(s => s.id === saleId);
+    if (!sale || !sale.items || !Array.isArray(sale.items)) {
+        toast('خطأ في تحميل بيانات الفاتورة', 'error');
+        return;
+    }
+
+    if (!confirm('⚠️ تأكيد إعادة الفاتورة إلى المخزون\n\nهل أنت متأكد من إعادة جميع المنتجات في هذه الفاتورة إلى المخزون؟\n\n⚠️ هذه العملية ستقوم بـ:\n• إضافة الكميات المباعة إلى المخزون\n• حذف الفاتورة من سجلات المبيعات')) {
+        return;
+    }
+
+    // إعادة المنتجات إلى المخزون
+    sale.items.forEach(item => {
+        const product = DB.products.find(p => p.id === item.product_id);
+        if (product) {
+            product.quantity += item.quantity;
+        }
+    });
+
+    // حفظ التغييرات في المخزون
+    DB.products = [...DB.products];
+
+    // حذف الفاتورة
+    DB.sales = DB.sales.filter(s => s.id !== saleId);
+    localStorage.setItem(DB.getDBKey('sales'), JSON.stringify(DB.sales));
+    localStorage.setItem(DB.getDBKey('products'), JSON.stringify(DB.products));
+
+    toast('✅ تم إعادة الفاتورة إلى المخزون بنجاح');
+    updateSalesReport();
+}
+
+// دالة حذف صنف واحد من الفاتورة وإعادته إلى المخزون
+function deleteAndReturnItem(saleId, itemIndex) {
+    const sale = DB.sales.find(s => s.id === saleId);
+    if (!sale || !sale.items || !Array.isArray(sale.items) || itemIndex < 0 || itemIndex >= sale.items.length) {
+        toast('خطأ في تحميل بيانات الفاتورة', 'error');
+        return;
+    }
+
+    const item = sale.items[itemIndex];
+    const product = DB.products.find(p => p.id === item.product_id);
+
+    if (!product) {
+        toast('المنتج غير موجود في المخزون', 'error');
+        return;
+    }
+
+    if (!confirm(`⚠️ تأكيد حذف الصنف وإعادته للمخزون\n\nهل أنت متأكد من حذف الصنف "${product.name}" وإعادته إلى المخزون؟\n\n⚠️ هذه العملية ستقوم بـ:\n• إضافة ${item.quantity} وحدة من "${product.name}" إلى المخزون\n• حذف الصنف من الفاتورة\n• تحديث إجمالي الفاتورة\n\n⚠️ هذه العملية لا يمكن التراجع عنها`)) {
+        return;
+    }
+
+    // إعادة الصنف إلى المخزون
+    product.quantity += item.quantity;
+    DB.saveProduct(product);
+
+    // حذف الصنف من الفاتورة
+    sale.items.splice(itemIndex, 1);
+
+    // إعادة حساب إجمالي الفاتورة
+    sale.total_amount = sale.items.reduce((sum, i) => sum + (i.total_price || (i.quantity * (i.unit_price || i.price))), 0);
+    sale.profit = sale.items.reduce((sum, i) => sum + (i.profit || 0), 0);
+
+    // تحديث الفاتورة
+    DB.updateSale(sale);
+
+    // إغلاق النافذة وعرض التفاصيل مرة أخرى
+    cmo();
+    showSaleDetails(saleId);
+    toast('✅ تم حذف الصنف وإعادته إلى المخزون بنجاح');
+}
+
+// دالة حذف فاتورة وإعادة المنتجات إلى المخزون
+function deleteAndReturnSale(saleId) {
+    const sale = DB.sales.find(s => s.id === saleId);
+    if (!sale || !sale.items || !Array.isArray(sale.items)) {
+        toast('خطأ في تحميل بيانات الفاتورة', 'error');
+        return;
+    }
+
+    if (!confirm('⚠️ تأكيد حذف الفاتورة وإعادة المنتجات للمخزون\n\nهل أنت متأكد من حذف هذه الفاتورة وإعادة جميع المنتجات إلى المخزون؟\n\n⚠️ هذه العملية ستقوم بـ:\n• إضافة الكميات المباعة إلى المخزون\n• حذف الفاتورة من سجلات المبيعات\n\n⚠️ هذه العملية لا يمكن التراجع عنها')) {
+        return;
+    }
+
+    // إعادة المنتجات إلى المخزون
+    sale.items.forEach(item => {
+        const product = DB.products.find(p => p.id === item.product_id);
+        if (product) {
+            product.quantity += item.quantity;
+            DB.saveProduct(product);
+        }
+    });
+
+    // حذف الفاتورة
+    DB.deleteSale(saleId);
+
+    toast('✅ تم حذف الفاتورة وإعادة المنتجات إلى المخزون بنجاح');
+    updateSalesReport();
+}
+
+// دالة حذف فاتورة
+function deleteSale(saleId) {
+    const sale = DB.sales.find(s => s.id === saleId);
+    if (!sale) {
+        toast('خطأ في تحميل بيانات الفاتورة', 'error');
+        return;
+    }
+
+    if (!confirm('⚠️ تأكيد حذف الفاتورة\n\nهل أنت متأكد من حذف هذه الفاتورة؟\n\n⚠️ هذه العملية لا يمكن التراجع عنها')) {
+        return;
+    }
+
+    // حذف الفاتورة
+    DB.sales = DB.sales.filter(s => s.id !== saleId);
+    localStorage.setItem(DB.getDBKey('sales'), JSON.stringify(DB.sales));
+
+    toast('✅ تم حذف الفاتورة بنجاح');
+    updateSalesReport();
+}
+
+// دالة طباعة تفاصيل الفاتورة
+function printSaleDetails(saleId) {
+    const sale = DB.sales.find(s => s.id === saleId);
+    if (!sale) return;
+
+    const printContent = document.getElementById('mbody').innerHTML;
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html dir="rtl">
+        <head>
+            <meta charset="UTF-8">
+            <title>فاتورة ${sale.invoice_number}</title>
+            <style>
+                body { font-family: 'Cairo', Arial, sans-serif; padding: 20px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th, td { padding: 10px; text-align: right; border-bottom: 1px solid #ddd; }
+                th { background: #f5f5f5; }
+                .total { font-size: 24px; font-weight: bold; color: #00d4ff; text-align: left; margin-top: 20px; }
+            </style>
+        </head>
+        <body>
+            <h1>فاتورة ${sale.invoice_number}</h1>
+            <p>التاريخ: ${sale.sale_date} ${sale.sale_time || ''}</p>
+            ${printContent}
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+}
+
+// دالة تصدير تقرير المبيعات إلى Excel
+function exportSalesReport() {
+    const period = document.getElementById('sales-period').value;
+    let sales = [...(DB.sales || [])];
+
+    // تطبيق نفس الفلترة المستخدمة في العرض
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+
+    sales = sales.filter(sale => {
+        if (period === 'today') {
+            return sale.sale_date === todayStr;
+        } else if (period === 'week') {
+            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            return new Date(sale.sale_date) >= weekAgo;
+        } else if (period === 'month') {
+            const monthAgo = new Date(today.getFullYear(), today.getMonth(), 1);
+            return new Date(sale.sale_date) >= monthAgo;
+        } else if (period === 'quarter') {
+            const quarterAgo = new Date(today.getTime() - 90 * 24 * 60 * 60 * 1000);
+            return new Date(sale.sale_date) >= quarterAgo;
+        } else if (period === 'year') {
+            const yearAgo = new Date(today.getFullYear(), 0, 1);
+            return new Date(sale.sale_date) >= yearAgo;
+        }
+        return true;
+    });
+
+    // إنشاء محتوى CSV
+    let csvContent = '\uFEFF'; // BOM للدعم العربي
+    csvContent += 'رقم الفاتورة,التاريخ,الوقت,المستخدم,المبلغ الإجمالي,الربح\n';
+
+    sales.forEach(sale => {
+        csvContent += `${sale.invoice_number},${sale.sale_date},${sale.sale_time || ''},${sale.username || ''},${sale.total_amount},${sale.profit || 0}\n`;
+    });
+
+    // تحميل الملف
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `تقرير_المبيعات_${getPeriodText(period)}_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+
+    toast('✅ تم تصدير التقرير بنجاح');
+}
+
+// دالة طباعة تقرير المبيعات
+function printSalesReport() {
+    const printContent = document.getElementById('sales-report-content').innerHTML;
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html dir="rtl">
+        <head>
+            <meta charset="UTF-8">
+            <title>تقرير المبيعات</title>
+            <style>
+                body { font-family: 'Cairo', Arial, sans-serif; padding: 20px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th, td { padding: 10px; text-align: right; border-bottom: 1px solid #ddd; }
+                th { background: #f5f5f5; }
+                @media print { body { -webkit-print-color-adjust: exact; } }
+            </style>
+        </head>
+        <body>
+            <h1>تقرير المبيعات</h1>
+            ${printContent}
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+}
+
+// دالة حذف فاتورة من التقرير
+function deleteSaleFromReport() {
+    const saleId = prompt('أدخل رقم الفاتورة للحذف:');
+    if (!saleId) return;
+
+    const sale = DB.sales.find(s => s.invoice_number === saleId);
+    if (!sale) {
+        toast('❌ الفاتورة غير موجودة', 'error');
+        return;
+    }
+
+    if (confirm(`هل أنت متأكد من حذف الفاتورة ${saleId}?`)) {
+        DB.deleteSale(sale.id);
+        toast('✅ تم حذف الفاتورة بنجاح');
+        updateSalesReport();
+    }
+}
+
+// دالة عرض تقرير المخزون الحالي
+function showCurrentInventoryReport() {
+    const reportContent = document.getElementById('inventory-report-content');
+    reportContent.innerHTML = '<div style="text-align: center; padding: 40px;"><div class="spin"></div><p>جاري تحميل تقرير المخزون...</p></div>';
+
+    setTimeout(() => {
+        const products = DB.products || [];
+        const totalQuantity = products.reduce((sum, p) => sum + p.quantity, 0);
+        const totalCost = products.reduce((sum, p) => sum + (p.quantity * p.cost_price), 0);
+        const totalValue = products.reduce((sum, p) => sum + (p.quantity * p.selling_price), 0);
+        const capital = totalCost;
+
+        let html = `
+            <div style="margin-bottom: 25px;">
+                <h3 style="color: var(--accent); margin-bottom: 15px;">📊 تقرير المخزون الحالي</h3>
+
+                <!-- بطاقات الملخص -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">عدد المنتجات</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--accent);">${products.length}</div>
+                    </div>
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">إجمالي الكمية</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--accent2);">${totalQuantity}</div>
+                    </div>
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">إجمالي التكلفة</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--warn);">${fmt(capital)}</div>
+                    </div>
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">إجمالي القيمة</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--accent);">${fmt(totalValue)}</div>
+                    </div>
+                </div>
+
+                <!-- جدول المخزون -->
+                <div style="background: var(--bg2); border-radius: 10px; overflow: hidden; border: 1px solid var(--border);">
+                    <div style="padding: 15px; border-bottom: 1px solid var(--border); background: var(--bg3);">
+                        <h4 style="margin: 0; color: var(--text);">تفاصيل المخزون</h4>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: var(--bg3);">
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">المنتج</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">الفئة</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">الحالة</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">الكمية</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">سعر الشراء</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">سعر البيع</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">التكلفة</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">القيمة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${products.map(p => `
+                                    <tr style="border-bottom: 1px solid var(--border); ${p.quantity === 0 ? 'background: rgba(255, 71, 87, 0.1);' : p.quantity < p.min_stock ? 'background: rgba(255, 165, 2, 0.1);' : ''}">
+                                        <td style="padding: 12px;">${p.name}</td>
+                                        <td style="padding: 12px;">${p.category || '-'}</td>
+                                        <td style="padding: 12px;">${p.condition || '-'}</td>
+                                        <td style="padding: 12px; ${p.quantity === 0 ? 'color: var(--danger);' : p.quantity < p.min_stock ? 'color: var(--warn);' : ''} font-weight: bold;">${p.quantity}</td>
+                                        <td style="padding: 12px;">${fmt(p.cost_price)}</td>
+                                        <td style="padding: 12px;">${fmt(p.selling_price)}</td>
+                                        <td style="padding: 12px;">${fmt(p.quantity * p.cost_price)}</td>
+                                        <td style="padding: 12px;">${fmt(p.quantity * p.selling_price)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        reportContent.innerHTML = html;
+    }, 500);
+}
+
+// دالة عرض تقرير المخزون المنخفض
+function showLowStockReport() {
+    const reportContent = document.getElementById('inventory-report-content');
+    reportContent.innerHTML = '<div style="text-align: center; padding: 40px;"><div class="spin"></div><p>جاري تحميل تقرير المخزون المنخفض...</p></div>';
+
+    setTimeout(() => {
+        const products = (DB.products || []).filter(p => p.quantity > 0 && p.quantity < p.min_stock);
+
+        if (products.length === 0) {
+            reportContent.innerHTML = `
+                <div style="text-align: center; padding: 60px 20px; color: var(--muted);">
+                    <div style="font-size: 48px; margin-bottom: 20px;">✅</div>
+                    <p style="font-size: 18px;">لا توجد منتجات بمخزون منخفض</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = `
+            <div style="margin-bottom: 25px;">
+                <h3 style="color: var(--warn); margin-bottom: 15px;">⚠️ تقرير المخزون المنخفض</h3>
+
+                <div style="background: var(--bg2); padding: 20px; border-radius: 10px; margin-bottom: 25px;">
+                    <div style="font-size: 14px; color: var(--muted);">عدد المنتجات بمخزون منخفض:</div>
+                    <div style="font-size: 32px; font-weight: bold; color: var(--warn);">${products.length}</div>
+                </div>
+
+                <!-- جدول المخزون المنخفض -->
+                <div style="background: var(--bg2); border-radius: 10px; overflow: hidden; border: 1px solid var(--border);">
+                    <div style="padding: 15px; border-bottom: 1px solid var(--border); background: var(--bg3);">
+                        <h4 style="margin: 0; color: var(--text);">المنتجات التي تحتاج إلى إعادة تعبئة</h4>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: var(--bg3);">
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">المنتج</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">الفئة</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">الكمية الحالية</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">الحد الأدنى</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">النقص</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">سعر الشراء</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${products.map(p => `
+                                    <tr style="border-bottom: 1px solid var(--border); background: rgba(255, 165, 2, 0.1);">
+                                        <td style="padding: 12px;">${p.name}</td>
+                                        <td style="padding: 12px;">${p.category || '-'}</td>
+                                        <td style="padding: 12px; color: var(--warn); font-weight: bold;">${p.quantity}</td>
+                                        <td style="padding: 12px;">${p.min_stock}</td>
+                                        <td style="padding: 12px; color: var(--danger); font-weight: bold;">${p.min_stock - p.quantity}</td>
+                                        <td style="padding: 12px;">${fmt(p.cost_price)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        reportContent.innerHTML = html;
+    }, 500);
+}
+
+// دالة عرض تقرير المخزون المنتهي
+function showOutOfStockReport() {
+    const reportContent = document.getElementById('inventory-report-content');
+    reportContent.innerHTML = '<div style="text-align: center; padding: 40px;"><div class="spin"></div><p>جاري تحميل تقرير المخزون المنتهي...</p></div>';
+
+    setTimeout(() => {
+        const products = (DB.products || []).filter(p => p.quantity === 0);
+
+        if (products.length === 0) {
+            reportContent.innerHTML = `
+                <div style="text-align: center; padding: 60px 20px; color: var(--muted);">
+                    <div style="font-size: 48px; margin-bottom: 20px;">✅</div>
+                    <p style="font-size: 18px;">لا توجد منتجات منتهية من المخزون</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = `
+            <div style="margin-bottom: 25px;">
+                <h3 style="color: var(--danger); margin-bottom: 15px;">❌ تقرير المخزون المنتهي</h3>
+
+                <div style="background: var(--bg2); padding: 20px; border-radius: 10px; margin-bottom: 25px;">
+                    <div style="font-size: 14px; color: var(--muted);">عدد المنتجات المنتهية:</div>
+                    <div style="font-size: 32px; font-weight: bold; color: var(--danger);">${products.length}</div>
+                </div>
+
+                <!-- جدول المخزون المنتهي -->
+                <div style="background: var(--bg2); border-radius: 10px; overflow: hidden; border: 1px solid var(--border);">
+                    <div style="padding: 15px; border-bottom: 1px solid var(--border); background: var(--bg3);">
+                        <h4 style="margin: 0; color: var(--text);">المنتجات المنتهية من المخزون</h4>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: var(--bg3);">
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">المنتج</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">الفئة</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">الباركود</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">آخر سعر شراء</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">سعر البيع</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${products.map(p => `
+                                    <tr style="border-bottom: 1px solid var(--border); background: rgba(255, 71, 87, 0.1);">
+                                        <td style="padding: 12px;">${p.name}</td>
+                                        <td style="padding: 12px;">${p.category || '-'}</td>
+                                        <td style="padding: 12px;">${p.barcode || '-'}</td>
+                                        <td style="padding: 12px;">${fmt(p.cost_price)}</td>
+                                        <td style="padding: 12px;">${fmt(p.selling_price)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        reportContent.innerHTML = html;
+    }, 500);
+}
+
+// دالة عرض تقرير المخزون حسب الفئة
+function showInventoryByCategoryReport() {
+    const reportContent = document.getElementById('inventory-report-content');
+    reportContent.innerHTML = '<div style="text-align: center; padding: 40px;"><div class="spin"></div><p>جاري تحميل تقرير المخزون حسب الفئة...</p></div>';
+
+    setTimeout(() => {
+        const products = DB.products || [];
+        const categories = [...new Set(products.map(p => p.category).filter(c => c))];
+
+        let html = `
+            <div style="margin-bottom: 25px;">
+                <h3 style="color: var(--accent); margin-bottom: 15px;">📈 تقرير المخزون حسب الفئة</h3>
+
+                <div style="background: var(--bg2); padding: 20px; border-radius: 10px; margin-bottom: 25px;">
+                    <div style="font-size: 14px; color: var(--muted);">عدد الفئات:</div>
+                    <div style="font-size: 32px; font-weight: bold; color: var(--accent);">${categories.length}</div>
+                </div>
+
+                <!-- جدول المخزون حسب الفئة -->
+                <div style="background: var(--bg2); border-radius: 10px; overflow: hidden; border: 1px solid var(--border);">
+                    <div style="padding: 15px; border-bottom: 1px solid var(--border); background: var(--bg3);">
+                        <h4 style="margin: 0; color: var(--text);">تفاصيل المخزون حسب الفئة</h4>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: var(--bg3);">
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">الفئة</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">عدد المنتجات</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">إجمالي الكمية</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">إجمالي التكلفة</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">إجمالي القيمة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${categories.map(category => {
+                                    const categoryProducts = products.filter(p => p.category === category);
+                                    const totalQuantity = categoryProducts.reduce((sum, p) => sum + p.quantity, 0);
+                                    const totalCost = categoryProducts.reduce((sum, p) => sum + (p.quantity * p.cost_price), 0);
+                                    const totalValue = categoryProducts.reduce((sum, p) => sum + (p.quantity * p.selling_price), 0);
+                                    return `
+                                        <tr style="border-bottom: 1px solid var(--border);">
+                                            <td style="padding: 12px; font-weight: bold;">${category}</td>
+                                            <td style="padding: 12px;">${categoryProducts.length}</td>
+                                            <td style="padding: 12px;">${totalQuantity}</td>
+                                            <td style="padding: 12px;">${fmt(totalCost)}</td>
+                                            <td style="padding: 12px; color: var(--accent); font-weight: bold;">${fmt(totalValue)}</td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        reportContent.innerHTML = html;
+    }, 500);
+}
+
+// دالة عرض تقرير قيمة المخزون والرأسمال
+function showInventoryValueReport() {
+    const reportContent = document.getElementById('inventory-report-content');
+    reportContent.innerHTML = '<div style="text-align: center; padding: 40px;"><div class="spin"></div><p>جاري تحميل تقرير قيمة المخزون والرأسمال...</p></div>';
+
+    setTimeout(() => {
+        const products = DB.products || [];
+        const totalQuantity = products.reduce((sum, p) => sum + p.quantity, 0);
+        const totalCost = products.reduce((sum, p) => sum + (p.quantity * p.cost_price), 0);
+        const totalValue = products.reduce((sum, p) => sum + (p.quantity * p.selling_price), 0);
+        const expectedProfit = totalValue - totalCost;
+        const capital = totalCost;
+
+        let html = `
+            <div style="margin-bottom: 25px;">
+                <h3 style="color: var(--accent); margin-bottom: 15px;">💰 تقرير قيمة المخزون والرأسمال</h3>
+
+                <!-- بطاقات الملخص -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">إجمالي الكمية</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--accent);">${totalQuantity}</div>
+                    </div>
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">إجمالي التكلفة</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--warn);">${fmt(capital)}</div>
+                    </div>
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">إجمالي القيمة</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--accent);">${fmt(totalValue)}</div>
+                    </div>
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">الربح المتوقع</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--accent2);">${fmt(expectedProfit)}</div>
+                    </div>
+                </div>
+
+                <!-- جدول تفصيلي -->
+                <div style="background: var(--bg2); border-radius: 10px; overflow: hidden; border: 1px solid var(--border);">
+                    <div style="padding: 15px; border-bottom: 1px solid var(--border); background: var(--bg3);">
+                        <h4 style="margin: 0; color: var(--text);">تفاصيل المخزون</h4>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: var(--bg3);">
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">المنتج</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">الكمية</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">سعر الشراء</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">سعر البيع</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">التكلفة</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">القيمة</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">الربح المتوقع</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${products.map(p => `
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 12px;">${p.name}</td>
+                                        <td style="padding: 12px;">${p.quantity}</td>
+                                        <td style="padding: 12px;">${fmt(p.cost_price)}</td>
+                                        <td style="padding: 12px;">${fmt(p.selling_price)}</td>
+                                        <td style="padding: 12px;">${fmt(p.quantity * p.cost_price)}</td>
+                                        <td style="padding: 12px;">${fmt(p.quantity * p.selling_price)}</td>
+                                        <td style="padding: 12px; color: var(--accent2); font-weight: bold;">${fmt(p.quantity * (p.selling_price - p.cost_price))}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        reportContent.innerHTML = html;
+    }, 500);
+}
+
+// دالة عرض تقرير المشتريات
+function showPurchasesReport() {
+    const reportContent = document.getElementById('financial-report-content');
+    reportContent.innerHTML = '<div style="text-align: center; padding: 40px;"><div class="spin"></div><p>جاري تحميل تقرير المشتريات...</p></div>';
+
+    setTimeout(() => {
+        const purchases = DB.purchases || [];
+        const totalPurchases = purchases.reduce((sum, p) => sum + p.total_amount, 0);
+        const totalPaid = purchases.reduce((sum, p) => sum + p.paid_amount, 0);
+        const totalRemaining = purchases.reduce((sum, p) => sum + (p.remaining_amount || 0), 0);
+
+        let html = `
+            <div style="margin-bottom: 25px;">
+                <h3 style="color: var(--accent); margin-bottom: 15px;">🛒 تقرير المشتريات</h3>
+
+                <!-- بطاقات الملخص -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">إجمالي المشتريات</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--accent);">${fmt(totalPurchases)}</div>
+                    </div>
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">المبالغ المدفوعة</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--accent2);">${fmt(totalPaid)}</div>
+                    </div>
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">المبالغ المتبقية</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--danger);">${fmt(totalRemaining)}</div>
+                    </div>
+                </div>
+
+                <!-- جدول المشتريات -->
+                <div style="background: var(--bg2); border-radius: 10px; overflow: hidden; border: 1px solid var(--border);">
+                    <div style="padding: 15px; border-bottom: 1px solid var(--border); background: var(--bg3);">
+                        <h4 style="margin: 0; color: var(--text);">تفاصيل المشتريات</h4>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: var(--bg3);">
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">رقم الفاتورة</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">التاريخ</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">المورد</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">المبلغ</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">المدفوع</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">المتبقي</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${purchases.map(p => `
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 12px;">${p.invoice_number}</td>
+                                        <td style="padding: 12px;">${p.purchase_date}</td>
+                                        <td style="padding: 12px;">${p.supplier_name || '-'}</td>
+                                        <td style="padding: 12px; color: var(--accent); font-weight: bold;">${fmt(p.total_amount)}</td>
+                                        <td style="padding: 12px; color: var(--accent2); font-weight: bold;">${fmt(p.paid_amount)}</td>
+                                        <td style="padding: 12px; color: var(--danger); font-weight: bold;">${fmt(p.remaining_amount || 0)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        reportContent.innerHTML = html;
+    }, 500);
+}
+
+// دالة تصدير تقرير المبيعات إلى Excel
+function exportSalesReport() {
+    const period = document.getElementById('sales-period').value;
+    let sales = [...(DB.sales || [])];
+
+    // تطبيق نفس الفلترة المستخدمة في العرض
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+
+    sales = sales.filter(sale => {
+        if (period === 'today') {
+            return sale.sale_date === todayStr;
+        } else if (period === 'week') {
+            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            return new Date(sale.sale_date) >= weekAgo;
+        } else if (period === 'month') {
+            const monthAgo = new Date(today.getFullYear(), today.getMonth(), 1);
+            return new Date(sale.sale_date) >= monthAgo;
+        } else if (period === 'quarter') {
+            const quarterAgo = new Date(today.getTime() - 90 * 24 * 60 * 60 * 1000);
+            return new Date(sale.sale_date) >= quarterAgo;
+        } else if (period === 'year') {
+            const yearAgo = new Date(today.getFullYear(), 0, 1);
+            return new Date(sale.sale_date) >= yearAgo;
+        }
+        return true;
+    });
+
+    // ترتيب النتائج
+    sales.sort((a, b) => new Date(b.sale_date) - new Date(a.sale_date));
+
+    // إنشاء محتوى CSV
+    let csvContent = '﻿'; // BOM للدعم العربي
+    csvContent += 'رقم الفاتورة,التاريخ,الوقت,المستخدم,المبلغ,الربح\n';
+
+    sales.forEach(sale => {
+        const row = [
+            sale.invoice_number,
+            sale.sale_date,
+            sale.sale_time || '',
+            sale.username || '',
+            sale.total_amount,
+            sale.profit || 0
+        ].join(',');
+        csvContent += row + '\n';
+    });
+
+    // تحميل الملف
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `تقرير_المبيعات_${getPeriodText(period)}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast('✅ تم تصدير التقرير بنجاح');
+}
+
+// دالة طباعة تقرير المبيعات
+function printSalesReport() {
+    const period = document.getElementById('sales-period').value;
+    let sales = [...(DB.sales || [])];
+
+    // تطبيق الفلترة
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+
+    sales = sales.filter(sale => {
+        if (period === 'today') {
+            return sale.sale_date === todayStr;
+        } else if (period === 'week') {
+            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            return new Date(sale.sale_date) >= weekAgo;
+        } else if (period === 'month') {
+            const monthAgo = new Date(today.getFullYear(), today.getMonth(), 1);
+            return new Date(sale.sale_date) >= monthAgo;
+        } else if (period === 'quarter') {
+            const quarterAgo = new Date(today.getTime() - 90 * 24 * 60 * 60 * 1000);
+            return new Date(sale.sale_date) >= quarterAgo;
+        } else if (period === 'year') {
+            const yearAgo = new Date(today.getFullYear(), 0, 1);
+            return new Date(sale.sale_date) >= yearAgo;
+        }
+        return true;
+    });
+
+    sales.sort((a, b) => new Date(b.sale_date) - new Date(a.sale_date));
+
+    const totalSales = sales.reduce((sum, s) => sum + s.total_amount, 0);
+    const totalProfit = sales.reduce((sum, s) => sum + (s.profit || 0), 0);
+
+    // إنشاء نافذة الطباعة
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html dir="rtl">
+        <head>
+            <meta charset="UTF-8">
+            <title>تقرير المبيعات</title>
+            <style>
+                body { font-family: 'Cairo', Arial, sans-serif; padding: 20px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th, td { padding: 10px; text-align: right; border-bottom: 1px solid #ddd; }
+                th { background: #f5f5f5; }
+                .summary { background: #f0f3f5; padding: 15px; margin: 20px 0; border-radius: 5px; }
+                .summary-item { margin: 10px 0; }
+            </style>
+        </head>
+        <body>
+            <h1>📊 تقرير المبيعات - ${getPeriodText(period)}</h1>
+            <div class="summary">
+                <div class="summary-item">📅 الفترة: ${getPeriodText(period)}</div>
+                <div class="summary-item">📄 عدد الفواتير: ${sales.length}</div>
+                <div class="summary-item">💰 إجمالي المبيعات: ${fmt(totalSales)}</div>
+                <div class="summary-item">💹 إجمالي الأرباح: ${fmt(totalProfit)}</div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>رقم الفاتورة</th>
+                        <th>التاريخ</th>
+                        <th>الوقت</th>
+                        <th>المستخدم</th>
+                        <th>المبلغ</th>
+                        <th>الربح</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${sales.map(sale => `
+                        <tr>
+                            <td>${sale.invoice_number}</td>
+                            <td>${sale.sale_date}</td>
+                            <td>${sale.sale_time || '-'}</td>
+                            <td>${sale.username || '-'}</td>
+                            <td>${fmt(sale.total_amount)}</td>
+                            <td>${fmt(sale.profit || 0)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+            <div style="margin-top: 20px; text-align: center; color: #666;">
+                🏁 نهاية التقرير
+            </div>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+}
+
+// دالة حذف فاتورة من التقرير
+function deleteSaleFromReport() {
+    const invoiceNumber = prompt('أدخل رقم الفاتورة للحذف:');
+    if (!invoiceNumber) return;
+
+    const sale = DB.sales.find(s => s.invoice_number === invoiceNumber);
+    if (!sale) {
+        toast('❌ الفاتورة غير موجودة', 'error');
+        return;
+    }
+
+    if (!confirm(`هل أنت متأكد من حذف الفاتورة ${invoiceNumber}?`)) return;
+
+    DB.deleteSale(sale.id);
+    toast('✅ تم حذف الفاتورة بنجاح');
+    updateSalesReport();
+}
+
+// دالة عرض تقرير المصاريف
+function showExpensesReport() {
+    const reportContent = document.getElementById('financial-report-content');
+    reportContent.innerHTML = '<div style="text-align: center; padding: 40px;"><div class="spin"></div><p>جاري تحميل تقرير المصاريف...</p></div>';
+
+    setTimeout(() => {
+        const expenses = DB.getExpenses ? DB.getExpenses() : [];
+        const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+
+        // تجميع المصاريف حسب النوع
+        const expensesByType = {};
+        expenses.forEach(e => {
+            const type = e.expense_type || 'غير مصنف';
+            expensesByType[type] = (expensesByType[type] || 0) + e.amount;
+        });
+
+        let html = `
+            <div style="margin-bottom: 25px;">
+                <h3 style="color: var(--accent); margin-bottom: 15px;">💸 تقرير المصاريف</h3>
+
+                <!-- بطاقات الملخص -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">إجمالي المصاريف</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--danger);">${fmt(totalExpenses)}</div>
+                    </div>
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">عدد المصروفات</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--text);">${expenses.length}</div>
+                    </div>
+                </div>
+
+                <!-- تجميع حسب النوع -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                    ${Object.entries(expensesByType).map(([type, amount]) => `
+                        <div style="background: var(--bg2); padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
+                            <div style="font-size: 12px; color: var(--muted); margin-bottom: 5px;">${type}</div>
+                            <div style="font-size: 20px; font-weight: bold; color: var(--danger);">${fmt(amount)}</div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <!-- جدول المصاريف -->
+                <div style="background: var(--bg2); border-radius: 10px; overflow: hidden; border: 1px solid var(--border);">
+                    <div style="padding: 15px; border-bottom: 1px solid var(--border); background: var(--bg3);">
+                        <h4 style="margin: 0; color: var(--text);">تفاصيل المصاريف</h4>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: var(--bg3);">
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">التاريخ</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">الوصف</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">النوع</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">المبلغ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${expenses.map(e => `
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 12px;">${e.expense_date}</td>
+                                        <td style="padding: 12px;">${e.description || '-'}</td>
+                                        <td style="padding: 12px;">${e.expense_type || '-'}</td>
+                                        <td style="padding: 12px; color: var(--danger); font-weight: bold;">${fmt(e.amount)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        reportContent.innerHTML = html;
+    }, 500);
+}
+
+// دالة عرض تقرير المخزون
+function showInventoryReport() {
+    const reportContent = document.getElementById('report-content');
+    reportContent.innerHTML = '<div style="text-align: center; padding: 40px;"><div class="spin"></div><p>جاري تحميل تقرير المخزون...</p></div>';
+
+    setTimeout(() => {
+        const products = DB.products || [];
+        const totalValue = products.reduce((sum, p) => sum + (p.quantity * p.selling_price), 0);
+        const totalCost = products.reduce((sum, p) => sum + (p.quantity * p.cost_price), 0);
+        const totalProfit = products.reduce((sum, p) => sum + (p.quantity * (p.selling_price - p.cost_price)), 0);
+        const lowStock = products.filter(p => p.quantity <= p.min_stock);
+
+        let html = `
+            <div style="margin-bottom: 25px;">
+                <h3 style="color: var(--accent); margin-bottom: 15px;">📋 تقرير المخزون</h3>
+
+                <!-- بطاقات الملخص -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">إجمالي قيمة المخزون</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--accent);">${fmt(totalValue)}</div>
+                    </div>
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">إجمالي تكلفة المخزون</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--accent2);">${fmt(totalCost)}</div>
+                    </div>
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">الربح المتوقع</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--accent2);">${fmt(totalProfit)}</div>
+                    </div>
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">منتجات منخفضة المخزون</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--danger);">${lowStock.length}</div>
+                    </div>
+                </div>
+
+                ${lowStock.length > 0 ? `
+                <!-- تنبيه المخزون المنخفض -->
+                <div style="background: rgba(255, 71, 87, 0.1); border: 1px solid var(--danger); border-radius: 10px; padding: 15px; margin-bottom: 25px;">
+                    <h4 style="color: var(--danger); margin: 0 0 10px 0;">⚠️ منتجات منخفضة المخزون</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;">
+                        ${lowStock.map(p => `
+                            <div style="background: var(--bg2); padding: 10px; border-radius: 8px;">
+                                <div style="font-weight: bold; margin-bottom: 5px;">${p.name}</div>
+                                <div style="font-size: 12px; color: var(--muted);">الكمية: ${p.quantity} | الحد الأدنى: ${p.min_stock}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- جدول المخزون -->
+                <div style="background: var(--bg2); border-radius: 10px; overflow: hidden; border: 1px solid var(--border);">
+                    <div style="padding: 15px; border-bottom: 1px solid var(--border); background: var(--bg3);">
+                        <h4 style="margin: 0; color: var(--text);">تفاصيل المخزون</h4>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: var(--bg3);">
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">المنتج</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">الماركة</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">الكمية</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">سعر الشراء</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">سعر البيع</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">قيمة المخزون</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">الربح المتوقع</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${products.map(p => `
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 12px;">${p.name}</td>
+                                        <td style="padding: 12px;">${p.brand}</td>
+                                        <td style="padding: 12px;">${p.quantity}</td>
+                                        <td style="padding: 12px;">${fmt(p.cost_price)}</td>
+                                        <td style="padding: 12px;">${fmt(p.selling_price)}</td>
+                                        <td style="padding: 12px; color: var(--accent); font-weight: bold;">${fmt(p.quantity * p.selling_price)}</td>
+                                        <td style="padding: 12px; color: var(--accent2); font-weight: bold;">${fmt(p.quantity * (p.selling_price - p.cost_price))}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        reportContent.innerHTML = html;
+    }, 500);
+}
+
+// دالة عرض تقرير الصيانة
+function showMaintenanceReport() {
+    const reportContent = document.getElementById('report-content');
+    reportContent.innerHTML = '<div style="text-align: center; padding: 40px;"><div class="spin"></div><p>جاري تحميل تقرير الصيانة...</p></div>';
+
+    setTimeout(() => {
+        const maintenance = DB.getMaintenance() || [];
+        const totalCost = maintenance.reduce((sum, m) => sum + m.cost, 0);
+        const totalSales = maintenance.reduce((sum, m) => sum + m.selling_price, 0);
+        const totalProfit = maintenance.reduce((sum, m) => sum + (m.selling_price - m.cost), 0);
+
+        // تجميع حسب الحالة
+        const byStatus = {};
+        maintenance.forEach(m => {
+            const status = m.status || 'غير محدد';
+            byStatus[status] = (byStatus[status] || 0) + 1;
+        });
+
+        let html = `
+            <div style="margin-bottom: 25px;">
+                <h3 style="color: var(--accent); margin-bottom: 15px;">🔧 تقرير الصيانة</h3>
+
+                <!-- بطاقات الملخص -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">عدد الطلبات</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--text);">${maintenance.length}</div>
+                    </div>
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">إجمالي التكاليف</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--danger);">${fmt(totalCost)}</div>
+                    </div>
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">إجمالي المبيعات</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--accent);">${fmt(totalSales)}</div>
+                    </div>
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">صافي الربح</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--accent2);">${fmt(totalProfit)}</div>
+                    </div>
+                </div>
+
+                <!-- تجميع حسب الحالة -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                    ${Object.entries(byStatus).map(([status, count]) => `
+                        <div style="background: var(--bg2); padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
+                            <div style="font-size: 12px; color: var(--muted); margin-bottom: 5px;">${status}</div>
+                            <div style="font-size: 20px; font-weight: bold; color: var(--accent);">${count}</div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <!-- جدول الصيانة -->
+                <div style="background: var(--bg2); border-radius: 10px; overflow: hidden; border: 1px solid var(--border);">
+                    <div style="padding: 15px; border-bottom: 1px solid var(--border); background: var(--bg3);">
+                        <h4 style="margin: 0; color: var(--text);">تفاصيل الصيانة</h4>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: var(--bg3);">
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">العميل</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">الهاتف</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">الجهاز</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">المشكلة</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">التكلفة</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">سعر البيع</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">الربح</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${maintenance.map(m => `
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 12px;">${m.customer_name}</td>
+                                        <td style="padding: 12px;">${m.phone}</td>
+                                        <td style="padding: 12px;">${m.device_model}</td>
+                                        <td style="padding: 12px;">${m.problem_description}</td>
+                                        <td style="padding: 12px; color: var(--danger); font-weight: bold;">${fmt(m.cost)}</td>
+                                        <td style="padding: 12px; color: var(--accent); font-weight: bold;">${fmt(m.selling_price)}</td>
+                                        <td style="padding: 12px; color: var(--accent2); font-weight: bold;">${fmt(m.selling_price - m.cost)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        reportContent.innerHTML = html;
+    }, 500);
+}
+
+// دالة عرض تقرير الأرباح
+function showProfitReport() {
+    const reportContent = document.getElementById('report-content');
+    reportContent.innerHTML = '<div style="text-align: center; padding: 40px;"><div class="spin"></div><p>جاري تحميل تقرير الأرباح...</p></div>';
+
+    setTimeout(() => {
+        const sales = DB.sales || [];
+        const expenses = DB.getExpenses ? DB.getExpenses() : [];
+        const maintenance = DB.getMaintenance() || [];
+
+        const totalSales = sales.reduce((sum, s) => sum + s.total_amount, 0);
+        const totalSalesProfit = sales.reduce((sum, s) => sum + (s.profit || 0), 0);
+        const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+        const maintenanceProfit = maintenance.reduce((sum, m) => sum + (m.selling_price - m.cost), 0);
+        const totalProfit = totalSalesProfit + maintenanceProfit - totalExpenses;
+
+        // تجميع البيانات حسب الشهر
+        const monthlyData = {};
+        [...sales, ...expenses].forEach(item => {
+            const month = (item.sale_date || item.expense_date || '').substring(0, 7);
+            if (!month) return;
+
+            if (!monthlyData[month]) {
+                monthlyData[month] = { sales: 0, expenses: 0, profit: 0 };
+            }
+
+            if (item.total_amount) {
+                monthlyData[month].sales += item.total_amount;
+                monthlyData[month].profit += (item.profit || 0);
+            }
+            if (item.amount) {
+                monthlyData[month].expenses += item.amount;
+                monthlyData[month].profit -= item.amount;
+            }
+        });
+
+        // إضافة أرباح الصيانة
+        maintenance.forEach(m => {
+            const month = (m.received_date || '').substring(0, 7);
+            if (!month) return;
+
+            if (!monthlyData[month]) {
+                monthlyData[month] = { sales: 0, expenses: 0, profit: 0 };
+            }
+            monthlyData[month].profit += (m.selling_price - m.cost);
+        });
+
+        const sortedMonths = Object.keys(monthlyData).sort();
+
+        let html = `
+            <div style="margin-bottom: 25px;">
+                <h3 style="color: var(--accent); margin-bottom: 15px;">💹 تقرير الأرباح الشامل</h3>
+
+                <!-- بطاقات الملخص -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">إجمالي المبيعات</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--accent);">${fmt(totalSales)}</div>
+                    </div>
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">إجمالي المصاريف</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--danger);">${fmt(totalExpenses)}</div>
+                    </div>
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">أرباح الصيانة</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--warn);">${fmt(maintenanceProfit)}</div>
+                    </div>
+                    <div style="background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">صافي الربح</div>
+                        <div style="font-size: 24px; font-weight: bold; color: ${totalProfit >= 0 ? 'var(--accent2)' : 'var(--danger)'};">${fmt(totalProfit)}</div>
+                    </div>
+                </div>
+
+                <!-- جدول الأرباح الشهري -->
+                <div style="background: var(--bg2); border-radius: 10px; overflow: hidden; border: 1px solid var(--border);">
+                    <div style="padding: 15px; border-bottom: 1px solid var(--border); background: var(--bg3);">
+                        <h4 style="margin: 0; color: var(--text);">الأرباح الشهرية</h4>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: var(--bg3);">
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">الشهر</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">المبيعات</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">المصاريف</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px;">صافي الربح</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${sortedMonths.map(month => {
+                                    const data = monthlyData[month];
+                                    return `
+                                        <tr style="border-bottom: 1px solid var(--border);">
+                                            <td style="padding: 12px;">${month}</td>
+                                            <td style="padding: 12px; color: var(--accent); font-weight: bold;">${fmt(data.sales)}</td>
+                                            <td style="padding: 12px; color: var(--danger); font-weight: bold;">${fmt(data.expenses)}</td>
+                                            <td style="padding: 12px; color: ${data.profit >= 0 ? 'var(--accent2)' : 'var(--danger)'}; font-weight: bold;">${fmt(data.profit)}</td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        reportContent.innerHTML = html;
+    }, 500);
 }
 
 function currency() {
@@ -2737,6 +4991,14 @@ function currency() {
     </div>`;
 }
 
+// أسعار الصرف الافتراضية
+let rates = {
+  syp_buy: 14800,
+  syp_sell: 15000,
+  try_buy: 29.5,
+  try_sell: 30.5
+};
+
 let svT;
 function svRates(){rates.syp_buy=parseFloat(document.getElementById('r1').value)||14800;rates.syp_sell=parseFloat(document.getElementById('r2').value)||15000;rates.try_buy=parseFloat(document.getElementById('r3').value)||29.5;rates.try_sell=parseFloat(document.getElementById('r4').value)||30.5;clearTimeout(svT);svT=setTimeout(()=>api('/api/currency/rates','POST',rates),900);}
 function nv(id){return parseFloat(document.getElementById(id)?.value)||0;}
@@ -2749,14 +5011,6 @@ function calcCur(){
   if(sr&&syp){sr.innerHTML=resBox('دولار (شراء)',ss>0?syp/ss:0)+resBox('دولار (بيع)',sb>0?syp/sb:0,'var(--danger)')+resBox('تركي (شراء)',ts>0?syp/ts:0)+resBox('تركي (بيع)',tb>0?syp/tb:0,'var(--danger)');}
   if(tr&&tryv){tr.innerHTML=resBox('دولار (شراء)',ts>0?tryv/ts:0)+resBox('دولار (بيع)',tb>0?tryv/tb:0,'var(--danger)')+resBox('سوري (شراء)',tryv*(ss>0?sb/ts:0))+resBox('سوري (بيع)',tryv*(tb>0?ss/tb:0),'var(--danger)');}
 }
-
-// أسعار الصرف الافتراضية
-let rates = {
-  syp_buy: 14800,
-  syp_sell: 15000,
-  try_buy: 29.5,
-  try_sell: 30.5
-};
 
 // تحميل أسعار الصرف من LocalStorage
 const savedRates = localStorage.getItem('rates');
@@ -3038,9 +5292,2016 @@ function count() {
 
 function mobile() {
     const c = document.getElementById('pc');
-    c.innerHTML = `<div class="tw"><div class="th"><h3>📱 إدارة الموبايلات</h3></div><div style="padding:20px">✅ قسم إدارة الموبايلات - جاهز للاستخدام</div></div>`;
+
+    // التحقق من وجود البيانات
+    if (!DB.mobiles) DB.mobiles = { inventory: [], purchases: [], payments: [], debts: [], cash: [] };
+    if (!DB.products) DB.products = [];
+    if (!DB.purchases) DB.purchases = [];
+    if (!DB.payments) DB.payments = [];
+    if (!DB.sales) DB.sales = [];
+
+    const html = `
+    <div class="tw">
+        <div class="th">
+            <h3>📱 إدارة الموبايلات والمخزون</h3>
+            <button class="btn btn-ghost btn-sm" onclick="generateMobileReport()">📊 تقرير شامل</button>
+        </div>
+
+        <!-- التبويبات -->
+        <div class="tabs" style="display: flex; gap: 10px; margin: 15px; border-bottom: 2px solid var(--border); padding-bottom: 10px;">
+            <button class="tab-btn active" data-tab="inventory" onclick="switchMobileTab('inventory')">📦 مخزون الموبايلات</button>
+            <button class="tab-btn" data-tab="purchases" onclick="switchMobileTab('purchases')">🛒 فواتير المشتريات</button>
+            <button class="tab-btn" data-tab="payments" onclick="switchMobileTab('payments')">💸 الدفعات المتبقية</button>
+            <button class="tab-btn" data-tab="debts" onclick="switchMobileTab('debts')">📝 ديون العملاء</button>
+            <button class="tab-btn" data-tab="cash" onclick="switchMobileTab('cash')">💰 صندوق الموبايلات</button>
+        </div>
+
+        <!-- محتوى التبويبات -->
+        <div id="mobile-tab-content">
+            <!-- سيتم تحميل المحتوى حسب التبويب المختار -->
+        </div>
+    </div>`;
+
+    c.innerHTML = html;
+
+    // تحميل تبويب المخزون افتراضياً
+    switchMobileTab('inventory');
 }
 
+// دالة التبديل بين التبويبات
+function switchMobileTab(tab) {
+    // تحديث الأزرار
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.tab === tab) {
+            btn.classList.add('active');
+        }
+    });
+
+    const content = document.getElementById('mobile-tab-content');
+
+    switch(tab) {
+        case 'inventory':
+            loadMobileInventoryTab();
+            break;
+        case 'purchases':
+            loadMobilePurchasesTab();
+            break;
+        case 'payments':
+            loadMobilePaymentsTab();
+            break;
+        case 'debts':
+            loadMobileDebtsTab();
+            break;
+        case 'cash':
+            loadMobileCashTab();
+            break;
+    }
+}
+
+// تبويب مخزون الموبايلات
+function loadMobileInventoryTab() {
+    const content = document.getElementById('mobile-tab-content');
+
+    const html = `
+    <div class="sb-bar" style="margin: 15px 0;">
+        <input class="si" id="mobile-search" placeholder="🔍 بحث..." oninput="refreshMobileInventory()">
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <label>📅 من:</label>
+            <input type="date" id="mobile-date-from" style="padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg3); color: var(--text);">
+            <label>إلى:</label>
+            <input type="date" id="mobile-date-to" style="padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg3); color: var(--text);">
+            <button class="btn btn-sm" onclick="refreshMobileInventory()">🔍</button>
+            <button class="btn btn-success btn-sm" onclick="addMobileProduct()">➕ إضافة موبايل</button>
+            <button class="btn btn-warn btn-sm" onclick="editMobileProduct()">✏️ تعديل</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteMobileProduct()">🗑️ حذف</button>
+            <button class="btn btn-ghost btn-sm" onclick="directSaleMobile()">💰 بيع مباشر</button>
+            <button class="btn btn-danger btn-sm" onclick="clearMobileInventory()">🧨 حذف الجميع</button>
+        </div>
+    </div>
+
+    <div class="tw" style="margin: 15px;">
+        <div class="th">
+            <h3>📦 مخزون الموبايلات</h3>
+        </div>
+        <div id="mobile-inventory-table"></div>
+    </div>`;
+
+    content.innerHTML = html;
+
+    // تعيين التاريخ الافتراضي
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('mobile-date-from').value = today;
+    document.getElementById('mobile-date-to').value = today;
+
+    // تحميل البيانات
+    refreshMobileInventory();
+}
+
+// دالة اختيار صفوف الجدول
+function selectMobileRow(row) {
+    // إزالة التحديد من جميع الصفوف
+    document.querySelectorAll('.mobile-row').forEach(r => r.classList.remove('selected'));
+    // إضافة التحديد للصف المحدد
+    row.classList.add('selected');
+}
+
+function selectPurchaseRow(row) {
+    document.querySelectorAll('.purchase-row').forEach(r => r.classList.remove('selected'));
+    row.classList.add('selected');
+}
+
+function selectPaymentRow(row) {
+    document.querySelectorAll('.payment-row').forEach(r => r.classList.remove('selected'));
+    row.classList.add('selected');
+}
+
+function selectDebtRow(row) {
+    document.querySelectorAll('.debt-row').forEach(r => r.classList.remove('selected'));
+    row.classList.add('selected');
+}
+
+// دالة تحديث مخزون الموبايلات
+function refreshMobileInventory() {
+    const searchTerm = document.getElementById('mobile-search').value.trim().toLowerCase();
+    const dateFrom = document.getElementById('mobile-date-from').value;
+    const dateTo = document.getElementById('mobile-date-to').value;
+
+    // تصفية المنتجات (فئة موبايلات فقط)
+    let filtered = DB.products.filter(p => {
+        if (p.category !== 'موبايلات') return false;
+        if (p.is_deleted) return false;
+
+        const matchesSearch = !searchTerm || 
+            p.name.toLowerCase().includes(searchTerm) ||
+            p.brand.toLowerCase().includes(searchTerm) ||
+            p.model.toLowerCase().includes(searchTerm) ||
+            p.barcode?.toLowerCase().includes(searchTerm);
+
+        const matchesDate = (!dateFrom || p.created_date >= dateFrom) && 
+                           (!dateTo || p.created_date <= dateTo);
+
+        return matchesSearch && matchesDate;
+    });
+
+    // ترتيب حسب التاريخ (الأحدث أولاً)
+    filtered.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+
+    let html = '<table style="width: 100%; border-collapse: collapse;">';
+    html += '<thead><tr style="background: var(--bg3);">';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">الاسم</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">الماركة</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">الموديل</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">الكمية</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">الباركود</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">سعر الشراء</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">سعر البيع</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">الحالة</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">التاريخ</th>';
+    html += '</tr></thead><tbody>';
+
+    filtered.forEach(p => {
+        const status = p.quantity > p.min_stock ? '✅ متوفر' : 
+                     p.quantity > 0 ? '⚠️ منخفض' : '❌ منتهي';
+        html += `<tr class="mobile-row" data-id="${p.id}" style="cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.2s;" onclick="selectMobileRow(this)">`;
+        html += `<td style="padding: 12px;">${p.name}</td>`;
+        html += `<td style="padding: 12px;">${p.brand}</td>`;
+        html += `<td style="padding: 12px;">${p.model}</td>`;
+        html += `<td style="padding: 12px;">${p.quantity}</td>`;
+        html += `<td style="padding: 12px;">${p.barcode}</td>`;
+        html += `<td style="padding: 12px;">${fmt(p.cost_price)}</td>`;
+        html += `<td style="padding: 12px;">${fmt(p.selling_price)}</td>`;
+        html += `<td style="padding: 12px;">${status}</td>`;
+        html += `<td style="padding: 12px;">${p.created_date}</td>`;
+        html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+
+    if (filtered.length === 0) {
+        html += '<div style="text-align: center; padding: 40px; color: var(--muted);">لا توجد موبايلات في المخزون</div>';
+    }
+
+    document.getElementById('mobile-inventory-table').innerHTML = html;
+}
+
+// تبويب فواتير المشتريات
+function loadMobilePurchasesTab() {
+    const content = document.getElementById('mobile-tab-content');
+
+    const html = `
+    <div class="sb-bar" style="margin: 15px 0;">
+        <input class="si" id="mobile-pur-search" placeholder="🔍 بحث..." oninput="refreshMobilePurchases()">
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <label>📅 من:</label>
+            <input type="date" id="mobile-pur-date-from" style="padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg3); color: var(--text);">
+            <label>إلى:</label>
+            <input type="date" id="mobile-pur-date-to" style="padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg3); color: var(--text);">
+            <button class="btn btn-sm" onclick="refreshMobilePurchases()">🔍</button>
+            <button class="btn btn-success btn-sm" onclick="addMobilePurchase()">➕ إضافة فاتورة</button>
+            <button class="btn btn-warn btn-sm" onclick="editMobilePurchase()">✏️ تعديل</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteMobilePurchase()">🗑️ حذف</button>
+            <button class="btn btn-danger btn-sm" onclick="clearMobilePurchases()">🧨 حذف الجميع</button>
+        </div>
+    </div>
+
+    <div class="tw" style="margin: 15px;">
+        <div class="th">
+            <h3>🛒 فواتير مشتريات الموبايلات</h3>
+        </div>
+        <div id="mobile-purchases-table"></div>
+    </div>`;
+
+    content.innerHTML = html;
+
+    // تعيين التاريخ الافتراضي
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('mobile-pur-date-from').value = today;
+    document.getElementById('mobile-pur-date-to').value = today;
+
+    // تحميل البيانات
+    refreshMobilePurchases();
+}
+
+// دالة تحديث فواتير المشتريات
+function refreshMobilePurchases() {
+    const searchTerm = document.getElementById('mobile-pur-search').value.trim().toLowerCase();
+    const dateFrom = document.getElementById('mobile-pur-date-from').value;
+    const dateTo = document.getElementById('mobile-pur-date-to').value;
+
+    // تصفية المشتريات التي تحتوي على موبايلات
+    let filtered = DB.purchases.filter(p => {
+        const hasMobiles = p.items?.some(item => {
+            const product = DB.products.find(prod => prod.id === item.product_id);
+            return product?.category === 'موبايلات';
+        });
+
+        if (!hasMobiles) return false;
+
+        const matchesSearch = !searchTerm || 
+            p.invoice_number.toLowerCase().includes(searchTerm) ||
+            p.supplier_name?.toLowerCase().includes(searchTerm);
+
+        const matchesDate = (!dateFrom || p.purchase_date >= dateFrom) && 
+                           (!dateTo || p.purchase_date <= dateTo);
+
+        return matchesSearch && matchesDate;
+    });
+
+    // ترتيب حسب التاريخ (الأحدث أولاً)
+    filtered.sort((a, b) => new Date(b.purchase_date) - new Date(a.purchase_date));
+
+    let html = '<table style="width: 100%; border-collapse: collapse;">';
+    html += '<thead><tr style="background: var(--bg3);">';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">رقم الفاتورة</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">المورد</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">الإجمالي</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">المدفوع</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">المتبقي</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">التاريخ</th>';
+    html += '</tr></thead><tbody>';
+
+    filtered.forEach(p => {
+        html += `<tr class="purchase-row" data-id="${p.id}" style="cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.2s;" onclick="selectPurchaseRow(this)">`;
+        html += `<td style="padding: 12px;">${p.invoice_number}</td>`;
+        html += `<td style="padding: 12px;">${p.supplier_name}</td>`;
+        html += `<td style="padding: 12px;">${fmt(p.total_amount)}</td>`;
+        html += `<td style="padding: 12px; color: var(--accent2);">${fmt(p.paid_amount)}</td>`;
+        html += `<td style="padding: 12px; color: ${p.remaining_amount > 0 ? 'var(--danger)' : 'var(--accent2)'};">${fmt(p.remaining_amount)}</td>`;
+        html += `<td style="padding: 12px;">${p.purchase_date}</td>`;
+        html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+
+    if (filtered.length === 0) {
+        html += '<div style="text-align: center; padding: 40px; color: var(--muted);">لا توجد فواتير مشتريات</div>';
+    }
+
+    document.getElementById('mobile-purchases-table').innerHTML = html;
+}
+
+// تبويب الدفعات المتبقية
+function loadMobilePaymentsTab() {
+    const content = document.getElementById('mobile-tab-content');
+
+    const html = `
+    <div class="sb-bar" style="margin: 15px 0;">
+        <input class="si" id="mobile-pay-search" placeholder="🔍 بحث..." oninput="refreshMobilePayments()">
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <label>📅 من:</label>
+            <input type="date" id="mobile-pay-date-from" style="padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg3); color: var(--text);">
+            <label>إلى:</label>
+            <input type="date" id="mobile-pay-date-to" style="padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg3); color: var(--text);">
+            <button class="btn btn-sm" onclick="refreshMobilePayments()">🔍</button>
+            <button class="btn btn-success btn-sm" onclick="payMobileRemaining()">💸 تسديد دفعة</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteMobilePurchaseFromPayments()">🗑️ حذف الفاتورة</button>
+            <button class="btn btn-danger btn-sm" onclick="clearMobilePayments()">🧨 حذف الجميع</button>
+        </div>
+    </div>
+
+    <div class="tw" style="margin: 15px;">
+        <div class="th">
+            <h3>💸 الدفعات المتبقية</h3>
+        </div>
+        <div id="mobile-payments-table"></div>
+    </div>`;
+
+    content.innerHTML = html;
+
+    // تعيين التاريخ الافتراضي
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('mobile-pay-date-from').value = today;
+    document.getElementById('mobile-pay-date-to').value = today;
+
+    // تحميل البيانات
+    refreshMobilePayments();
+}
+
+// دالة تحديث الدفعات المتبقية
+function refreshMobilePayments() {
+    const searchTerm = document.getElementById('mobile-pay-search').value.trim().toLowerCase();
+    const dateFrom = document.getElementById('mobile-pay-date-from').value;
+    const dateTo = document.getElementById('mobile-pay-date-to').value;
+
+    // تصفية المشتريات التي تحتوي على موبايلات ولها مبالغ متبقية
+    let filtered = DB.purchases.filter(p => {
+        const hasMobiles = p.items?.some(item => {
+            const product = DB.products.find(prod => prod.id === item.product_id);
+            return product?.category === 'موبايلات';
+        });
+
+        if (!hasMobiles || p.remaining_amount <= 0) return false;
+
+        const matchesSearch = !searchTerm || 
+            p.invoice_number.toLowerCase().includes(searchTerm) ||
+            p.supplier_name?.toLowerCase().includes(searchTerm);
+
+        const matchesDate = (!dateFrom || p.purchase_date >= dateFrom) && 
+                           (!dateTo || p.purchase_date <= dateTo);
+
+        return matchesSearch && matchesDate;
+    });
+
+    // ترتيب حسب التاريخ (الأحدث أولاً)
+    filtered.sort((a, b) => new Date(b.purchase_date) - new Date(a.purchase_date));
+
+    let html = '<table style="width: 100%; border-collapse: collapse;">';
+    html += '<thead><tr style="background: var(--bg3);">';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">رقم الفاتورة</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">المورد</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">الإجمالي</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">المدفوع</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">المتبقي</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">التاريخ</th>';
+    html += '</tr></thead><tbody>';
+
+    filtered.forEach(p => {
+        html += `<tr class="payment-row" data-id="${p.id}" style="cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.2s;" onclick="selectPaymentRow(this)">`;
+        html += `<td style="padding: 12px;">${p.invoice_number}</td>`;
+        html += `<td style="padding: 12px;">${p.supplier_name}</td>`;
+        html += `<td style="padding: 12px;">${fmt(p.total_amount)}</td>`;
+        html += `<td style="padding: 12px; color: var(--accent2);">${fmt(p.paid_amount)}</td>`;
+        html += `<td style="padding: 12px; color: ${p.remaining_amount > 0 ? 'var(--danger)' : 'var(--accent2)'};">${fmt(p.remaining_amount)}</td>`;
+        html += `<td style="padding: 12px;">${p.purchase_date}</td>`;
+        html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+
+    if (filtered.length === 0) {
+        html += '<div style="text-align: center; padding: 40px; color: var(--muted);">لا توجد دفعات متبقية</div>';
+    }
+
+    document.getElementById('mobile-payments-table').innerHTML = html;
+}
+
+// تبويب ديون العملاء
+function loadMobileDebtsTab() {
+    const content = document.getElementById('mobile-tab-content');
+
+    const html = `
+    <div class="sb-bar" style="margin: 15px 0;">
+        <input class="si" id="mobile-debt-search" placeholder="🔍 بحث..." oninput="refreshMobileDebts()">
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <button class="btn btn-sm" onclick="refreshMobileDebts()">🔄 تحديث</button>
+            <button class="btn btn-success btn-sm" onclick="payMobileDebt()">💸 تسديد دين</button>
+            <button class="btn btn-warn btn-sm" onclick="addMobileDebt()">➕ إضافة دين</button>
+            <button class="btn btn-danger btn-sm" onclick="clearMobileDebts()">🧨 حذف الجميع</button>
+        </div>
+    </div>
+
+    <div class="tw" style="margin: 15px;">
+        <div class="th">
+            <h3>📝 ديون العملاء</h3>
+        </div>
+        <div id="mobile-debts-table"></div>
+    </div>`;
+
+    content.innerHTML = html;
+
+    // تحميل البيانات
+    refreshMobileDebts();
+}
+
+// دالة تحديث ديون العملاء
+function refreshMobileDebts() {
+    const searchTerm = document.getElementById('mobile-debt-search').value.trim().toLowerCase();
+
+    // تصفية المبيعات التي تحتوي على موبايلات ولها مبالغ متبقية
+    let filtered = DB.sales.filter(s => {
+        const hasMobiles = s.items?.some(item => {
+            const product = DB.products.find(prod => prod.id === item.product_id);
+            return product?.category === 'موبايلات';
+        });
+
+        if (!hasMobiles || s.remaining_amount <= 0) return false;
+
+        const matchesSearch = !searchTerm || 
+            s.invoice_number.toLowerCase().includes(searchTerm) ||
+            s.customer_name?.toLowerCase().includes(searchTerm);
+
+        return matchesSearch;
+    });
+
+    // ترتيب حسب التاريخ (الأحدث أولاً)
+    filtered.sort((a, b) => new Date(b.sale_date) - new Date(a.sale_date));
+
+    let html = '<table style="width: 100%; border-collapse: collapse;">';
+    html += '<thead><tr style="background: var(--bg3);">';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">رقم الفاتورة</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">العميل</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">الإجمالي</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">المدفوع</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">المتبقي</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">التاريخ</th>';
+    html += '</tr></thead><tbody>';
+
+    filtered.forEach(s => {
+        html += `<tr class="debt-row" data-id="${s.id}" style="cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.2s;" onclick="selectDebtRow(this)">`;
+        html += `<td style="padding: 12px;">${s.invoice_number}</td>`;
+        html += `<td style="padding: 12px;">${s.customer_name}</td>`;
+        html += `<td style="padding: 12px;">${fmt(s.total_amount)}</td>`;
+        html += `<td style="padding: 12px; color: var(--accent2);">${fmt(s.paid_amount)}</td>`;
+        html += `<td style="padding: 12px; color: ${s.remaining_amount > 0 ? 'var(--danger)' : 'var(--accent2)'};">${fmt(s.remaining_amount)}</td>`;
+        html += `<td style="padding: 12px;">${s.sale_date}</td>`;
+        html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+
+    if (filtered.length === 0) {
+        html += '<div style="text-align: center; padding: 40px; color: var(--muted);">لا توجد ديون للعملاء</div>';
+    }
+
+    document.getElementById('mobile-debts-table').innerHTML = html;
+}
+
+// تبويب صندوق الموبايلات
+function loadMobileCashTab() {
+    const content = document.getElementById('mobile-tab-content');
+
+    const html = `
+    <div class="sb-bar" style="margin: 15px 0;">
+        <input class="si" id="mobile-cash-search" placeholder="🔍 بحث..." oninput="refreshMobileCash()">
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <label>📅 من:</label>
+            <input type="date" id="mobile-cash-date-from" style="padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg3); color: var(--text);">
+            <label>إلى:</label>
+            <input type="date" id="mobile-cash-date-to" style="padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg3); color: var(--text);">
+            <button class="btn btn-sm" onclick="refreshMobileCash()">🔍 فلترة</button>
+            <button class="btn btn-ghost btn-sm" onclick="refreshMobileCash()">🔄 تحديث</button>
+            <button class="btn btn-ghost btn-sm" onclick="resetMobileCashFilters()">↺ إعادة تعيين</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteCashTransaction()">🗑️ حذف معاملة</button>
+            <button class="btn btn-danger btn-sm" onclick="clearMobileCash()">🧨 حذف الجميع</button>
+        </div>
+    </div>
+
+    <!-- ملخص الصندوق -->
+    <div id="mobile-cash-summary" style="margin: 15px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;"></div>
+
+    <div class="tw" style="margin: 15px;">
+        <div class="th">
+            <h3>💰 حركة صندوق الموبايلات</h3>
+        </div>
+        <div id="mobile-cash-table"></div>
+    </div>`;
+
+    content.innerHTML = html;
+
+    // تعيين التاريخ الافتراضي
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('mobile-cash-date-from').value = today;
+    document.getElementById('mobile-cash-date-to').value = today;
+
+    // تحميل البيانات
+    refreshMobileCash();
+}
+
+// دالة تحديث صندوق الموبايلات
+function refreshMobileCash() {
+    const searchTerm = document.getElementById('mobile-cash-search').value.trim().toLowerCase();
+    const dateFrom = document.getElementById('mobile-cash-date-from').value;
+    const dateTo = document.getElementById('mobile-cash-date-to').value;
+
+    // جمع جميع العمليات المرتبطة بالموبايلات
+    let transactions = [];
+
+    // 1. مبيعات الموبايلات (دخل)
+    DB.sales.forEach(s => {
+        const hasMobiles = s.items?.some(item => {
+            const product = DB.products.find(prod => prod.id === item.product_id);
+            return product?.category === 'موبايلات';
+        });
+
+        if (hasMobiles && s.status !== 'cleared') {
+            transactions.push({
+                type: 'مبيعات',
+                invoice: s.invoice_number,
+                party: s.customer_name,
+                amount: s.paid_amount,
+                date: s.sale_date,
+                user: s.username || 'النظام',
+                tag: 'income'
+            });
+        }
+    });
+
+    // 2. فواتير المشتريات (خرج)
+    DB.purchases.forEach(p => {
+        const hasMobiles = p.items?.some(item => {
+            const product = DB.products.find(prod => prod.id === item.product_id);
+            return product?.category === 'موبايلات';
+        });
+
+        if (hasMobiles) {
+            transactions.push({
+                type: 'فاتورة شراء',
+                invoice: p.invoice_number,
+                party: p.supplier_name,
+                amount: p.paid_amount,
+                date: p.purchase_date,
+                user: 'النظام',
+                tag: 'expense'
+            });
+        }
+    });
+
+    // 3. تسديدات الديون (دخل)
+    DB.payments.forEach(py => {
+        if (py.type === 'sale_debt_payment') {
+            const sale = DB.sales.find(s => s.id === py.reference_id);
+            const hasMobiles = sale?.items?.some(item => {
+                const product = DB.products.find(prod => prod.id === item.product_id);
+                return product?.category === 'موبايلات';
+            });
+
+            if (hasMobiles) {
+                transactions.push({
+                    type: 'تسديد دين',
+                    invoice: sale?.invoice_number,
+                    party: sale?.customer_name,
+                    amount: py.amount,
+                    date: py.payment_date,
+                    user: py.username || 'النظام',
+                    tag: 'income'
+                });
+            }
+        }
+    });
+
+    // تصفية العمليات
+    let filtered = transactions.filter(t => {
+        const matchesSearch = !searchTerm || 
+            t.invoice.toLowerCase().includes(searchTerm) ||
+            t.party.toLowerCase().includes(searchTerm) ||
+            t.user.toLowerCase().includes(searchTerm);
+
+        const matchesDate = (!dateFrom || t.date >= dateFrom) && 
+                           (!dateTo || t.date <= dateTo);
+
+        return matchesSearch && matchesDate;
+    });
+
+    // ترتيب حسب التاريخ (الأحدث أولاً)
+    filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    // حساب الإجماليات
+    let totalIncome = 0;
+    let totalExpense = 0;
+
+    filtered.forEach(t => {
+        if (t.tag === 'income') {
+            totalIncome += t.amount;
+        } else {
+            totalExpense += t.amount;
+        }
+    });
+
+    // حساب صافي الربح
+    let netProfit = totalIncome - totalExpense;
+
+    // حساب إجمالي ديون العملاء
+    let totalCustomerDebts = DB.sales
+        .filter(s => {
+            const hasMobiles = s.items?.some(item => {
+                const product = DB.products.find(prod => prod.id === item.product_id);
+                return product?.category === 'موبايلات';
+            });
+            return hasMobiles && s.remaining_amount > 0;
+        })
+        .reduce((sum, s) => sum + s.remaining_amount, 0);
+
+    // عرض الملخص
+    const summaryHtml = `
+    <div style="background: var(--accent2); border-radius: 9px; padding: 14px; border-right: 4px solid var(--accent2);">
+        <div style="font-size: 11px; color: var(--muted);">إجمالي المقبوضات</div>
+        <div style="font-size: 20px; font-weight: 900; color: var(--bg);">${fmt(totalIncome)}</div>
+    </div>
+    <div style="background: var(--danger); border-radius: 9px; padding: 14px; border-right: 4px solid var(--danger);">
+        <div style="font-size: 11px; color: var(--muted);">إجمالي المدفوعات</div>
+        <div style="font-size: 20px; font-weight: 900; color: var(--bg);">${fmt(totalExpense)}</div>
+    </div>
+    <div style="background: ${netProfit >= 0 ? '#3498db' : '#c0392b'}; border-radius: 9px; padding: 14px; border-right: 4px solid ${netProfit >= 0 ? '#3498db' : '#c0392b'};">
+        <div style="font-size: 11px; color: var(--muted);">صافي الربح</div>
+        <div style="font-size: 20px; font-weight: 900; color: var(--bg);">${fmt(netProfit)}</div>
+    </div>
+    <div style="background: var(--warn); border-radius: 9px; padding: 14px; border-right: 4px solid var(--warn);">
+        <div style="font-size: 11px; color: var(--muted);">ديون العملاء</div>
+        <div style="font-size: 20px; font-weight: 900; color: var(--bg);">${fmt(totalCustomerDebts)}</div>
+    </div>`;
+
+    document.getElementById('mobile-cash-summary').innerHTML = summaryHtml;
+
+    // عرض الجدول
+    let html = '<table style="width: 100%; border-collapse: collapse;">';
+    html += '<thead><tr style="background: var(--bg3);">';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">نوع العملية</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">رقم الفاتورة</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">الطرف الآخر</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">المبلغ</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">التاريخ</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">المستخدم</th>';
+    html += '</tr></thead><tbody>';
+
+    filtered.forEach(t => {
+        html += `<tr style="border-bottom: 1px solid var(--border);">`;
+        html += `<td style="padding: 12px; color: ${t.tag === 'income' ? 'var(--accent2)' : 'var(--danger)'};">${t.type}</td>`;
+        html += `<td style="padding: 12px;">${t.invoice}</td>`;
+        html += `<td style="padding: 12px;">${t.party}</td>`;
+        html += `<td style="padding: 12px;">${fmt(t.amount)}</td>`;
+        html += `<td style="padding: 12px;">${t.date}</td>`;
+        html += `<td style="padding: 12px;">${t.user}</td>`;
+        html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+
+    if (filtered.length === 0) {
+        html += '<div style="text-align: center; padding: 40px; color: var(--muted);">لا توجد عمليات</div>';
+    }
+
+    document.getElementById('mobile-cash-table').innerHTML = html;
+}
+
+// دوال مساعدة للتبويبات
+function selectMobileRow(row) {
+    document.querySelectorAll('.mobile-row.selected').forEach(r => {
+        r.classList.remove('selected');
+        r.style.background = '';
+    });
+    row.classList.add('selected');
+    row.style.background = 'var(--bg3)';
+}
+
+function selectPurchaseRow(row) {
+    document.querySelectorAll('.purchase-row.selected').forEach(r => {
+        r.classList.remove('selected');
+        r.style.background = '';
+    });
+    row.classList.add('selected');
+    row.style.background = 'var(--bg3)';
+}
+
+function selectPaymentRow(row) {
+    document.querySelectorAll('.payment-row.selected').forEach(r => {
+        r.classList.remove('selected');
+        r.style.background = '';
+    });
+    row.classList.add('selected');
+    row.style.background = 'var(--bg3)';
+}
+
+function selectDebtRow(row) {
+    document.querySelectorAll('.debt-row.selected').forEach(r => {
+        r.classList.remove('selected');
+        r.style.background = '';
+    });
+    row.classList.add('selected');
+    row.style.background = 'var(--bg3)';
+}
+
+function resetMobileCashFilters() {
+    document.getElementById('mobile-cash-search').value = '';
+    document.getElementById('mobile-cash-date-from').value = new Date().toISOString().split('T')[0];
+    document.getElementById('mobile-cash-date-to').value = new Date().toISOString().split('T')[0];
+    refreshMobileCash();
+}
+
+// دوال الإضافة والتعديل والحذف (سيتم إضافتها لاحقاً)
+function addMobileProduct() {
+    omo('➕ إضافة موبايل جديد', `
+    <div class="fg">
+        <div class="ff full"><label>الاسم *</label><input id="mn" placeholder="iPhone 15 Pro"></div>
+        <div class="ff"><label>الماركة</label><input id="mb" placeholder="Apple"></div>
+        <div class="ff"><label>الموديل</label><input id="mm"></div>
+        <div class="ff"><label>سعر الشراء *</label><input id="mcp" type="number" placeholder="0"></div>
+        <div class="ff"><label>سعر البيع *</label><input id="msp" type="number" placeholder="0"></div>
+        <div class="ff"><label>الكمية *</label><input id="mq" type="number" placeholder="1"></div>
+        <div class="ff"><label>الباركود</label><input id="mbar"></div>
+        <div class="ff"><label>الحالة</label><select id="mcond"><option>جديد</option><option>مستعمل</option></select></div>
+    </div>`,
+    `<button class="btn btn-ghost" onclick="cmo()">إلغاء</button><button class="btn btn-success" onclick="saveMobile()">💾 حفظ</button>`);
+}
+
+function editMobileProduct() {
+    const selectedRow = document.querySelector('.mobile-row.selected');
+    if (!selectedRow) {
+        toast('⚠️ يرجى اختيار موبايل للتعديل', 'error');
+        return;
+    }
+
+    const id = parseInt(selectedRow.dataset.id);
+    const product = DB.products.find(p => p.id === id);
+
+    if (!product) {
+        toast('⚠️ لم يتم العثور على الموبايل', 'error');
+        return;
+    }
+
+    omo('✏️ تعديل موبايل', `
+    <div class="fg">
+        <div class="ff full"><label>الاسم</label><input id="emn" value="${product.name}"></div>
+        <div class="ff"><label>الماركة</label><input id="emb" value="${product.brand}"></div>
+        <div class="ff"><label>الموديل</label><input id="emm" value="${product.model}"></div>
+        <div class="ff"><label>سعر الشراء</label><input id="emcp" type="number" value="${product.cost_price}"></div>
+        <div class="ff"><label>سعر البيع</label><input id="emsp" type="number" value="${product.selling_price}"></div>
+        <div class="ff"><label>الكمية</label><input id="emq" type="number" value="${product.quantity}"></div>
+        <div class="ff"><label>الحالة</label><select id="emcond"><option ${product.condition==='جديد'?'selected':''}>جديد</option><option ${product.condition==='مستعمل'?'selected':''}>مستعمل</option></select></div>
+    </div>`,
+    `<button class="btn btn-ghost" onclick="cmo()">إلغاء</button><button class="btn btn-success" onclick="updateMobile(${id})">💾 حفظ</button>`);
+}
+
+function saveMobile() {
+    const data = {
+        name: document.getElementById('mn').value,
+        brand: document.getElementById('mb').value,
+        model: document.getElementById('mm').value,
+        cost_price: parseFloat(document.getElementById('mcp').value) || 0,
+        selling_price: parseFloat(document.getElementById('msp').value) || 0,
+        quantity: parseInt(document.getElementById('mq').value) || 1,
+        barcode: document.getElementById('mbar').value,
+        condition: document.getElementById('mcond').value,
+        category: 'موبايلات',
+        created_date: new Date().toISOString().split('T')[0]
+    };
+
+    if (!data.name || !data.brand) {
+        toast('⚠️ الاسم والماركة مطلوبان', 'error');
+        return;
+    }
+
+    DB.saveProduct(data);
+    toast('✅ تم إضافة الموبايل بنجاح');
+    cmo();
+    refreshMobileInventory();
+}
+
+function updateMobile(id) {
+    const data = {
+        name: document.getElementById('emn').value,
+        brand: document.getElementById('emb').value,
+        model: document.getElementById('emm').value,
+        cost_price: parseFloat(document.getElementById('emcp').value) || 0,
+        selling_price: parseFloat(document.getElementById('emsp').value) || 0,
+        quantity: parseInt(document.getElementById('emq').value) || 1,
+        condition: document.getElementById('emcond').value
+    };
+
+    DB.saveProduct({...data, id: id});
+    toast('✅ تم تحديث الموبايل بنجاح');
+    cmo();
+    refreshMobileInventory();
+}
+
+function deleteMobileProduct() {
+    toast('⚠️ هذه الميزة قيد التطوير', 'info');
+}
+
+function directSaleMobile() {
+    const selectedRow = document.querySelector('.mobile-row.selected');
+    if (!selectedRow) {
+        toast('⚠️ يرجى اختيار موبايل للبيع', 'error');
+        return;
+    }
+
+    const id = parseInt(selectedRow.dataset.id);
+    const product = DB.products.find(p => p.id === id);
+
+    if (!product) {
+        toast('⚠️ لم يتم العثور على الموبايل', 'error');
+        return;
+    }
+
+    if (product.quantity <= 0) {
+        toast('⚠️ الكمية غير متوفرة', 'error');
+        return;
+    }
+
+    omo('💰 بيع مباشر: ' + product.name, `
+    <div class="fg">
+        <div class="ff full"><label>سعر البيع *</label><input id="dsp" type="number" value="${product.selling_price}"></div>
+        <div class="ff full"><label>المبلغ المدفوع *</label><input id="dsa" type="number" value="${product.selling_price}"></div>
+        <div class="ff full"><label>اسم العميل (للدين)</label><input id="dscn" placeholder="اختياري"></div>
+    </div>`,
+    `<button class="btn btn-ghost" onclick="cmo()">إلغاء</button><button class="btn btn-success" onclick="processDirectSale(${id})">✅ بيع</button>`);
+}
+
+function clearMobileInventory() {
+    if (!confirm('⚠️ تأكيد الحذف\n\nهل أنت متأكد من حذف جميع الموبايلات؟\n\n⚠️ هذه العملية لا يمكن التراجع عنها!')) {
+        return;
+    }
+
+    DB.products = DB.products.filter(p => p.category !== 'موبايلات');
+    DB.saveProducts();
+    toast('✅ تم حذف جميع الموبايلات بنجاح');
+    refreshMobileInventory();
+}
+
+function processDirectSale(id) {
+    const price = parseFloat(document.getElementById('dsp').value) || 0;
+    const paid = parseFloat(document.getElementById('dsa').value) || 0;
+    const customerName = document.getElementById('dscn').value || 'عميل نقدي';
+
+    if (price <= 0) {
+        toast('⚠️ السعر يجب أن يكون أكبر من صفر', 'error');
+        return;
+    }
+
+    const product = DB.products.find(p => p.id === id);
+    if (!product) {
+        toast('⚠️ لم يتم العثور على الموبايل', 'error');
+        return;
+    }
+
+    // إنشاء عملية بيع
+    const sale = {
+        id: Date.now(),
+        items: [{
+            product_id: id,
+            quantity: 1,
+            unit_price: price,
+            total_price: price,
+            cost_price: product.cost_price,
+            profit: price - product.cost_price,
+            product_name: product.name
+        }],
+        total_amount: price,
+        paid_amount: paid,
+        remaining: price - paid,
+        invoice_number: DB.generateInvoiceNumber(),
+        sale_date: new Date().toISOString().split('T')[0],
+        sale_time: new Date().toLocaleTimeString('ar-SA'),
+        customer_name: customerName,
+        user_id: DB.currentUser?.id || 1
+    };
+
+    // خصم الكمية من المخزون
+    product.quantity -= 1;
+    DB.saveProduct(product);
+
+    // حفظ البيع
+    DB.sales.push(sale);
+    DB.saveSales();
+
+    toast('✅ تمت عملية البيع بنجاح');
+    cmo();
+    refreshMobileInventory();
+}
+
+function addMobilePurchase() {
+    omo('➕ فاتورة مشتريات جديدة', `
+    <div class="fg">
+        <div class="ff full"><label>المورد</label>
+        <select id="mp-sup">
+            <option value="">— بدون مورد —</option>
+            ${DB.suppliers.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
+        </select></div>
+        <div class="ff full"><label>رقم الفاتورة</label>
+        <input id="mp-inv" value="سيتم إنشاؤه تلقائياً" readonly></div>
+        <div class="ff"><label>الإجمالي</label>
+        <input id="mp-total" type="number" placeholder="0"></div>
+        <div class="ff"><label>المدفوع</label>
+        <input id="mp-paid" type="number" placeholder="0" oninput="updatePurchaseTotals()"></div>
+        <div id="mp-items" style="grid-column:1/-1;border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:10px">
+            <div style="text-align:center;color:var(--muted);padding:20px">لم تُضف أي منتجات بعد</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="grid-column:1/-1" onclick="addPurchaseItem()">+ إضافة صنف</button>
+    </div>`,
+    `<button class="btn btn-ghost" onclick="cmo()">إلغاء</button><button class="btn btn-success" onclick="savePurchase()">💾 حفظ الفاتورة</button>`);
+    updatePurchaseTotals();
+}
+
+function editMobilePurchase() {
+    const selectedRow = document.querySelector('.purchase-row.selected');
+    if (!selectedRow) {
+        toast('⚠️ يرجى اختيار فاتورة للتعديل', 'error');
+        return;
+    }
+
+    const id = parseInt(selectedRow.dataset.id);
+    const purchase = DB.purchases.find(p => p.id === id);
+
+    if (!purchase) {
+        toast('⚠️ لم يتم العثور على الفاتورة', 'error');
+        return;
+    }
+
+    omo('✏️ تعديل فاتورة المشتريات', `
+    <div class="fg">
+        <div class="ff full"><label>المورد</label>
+        <select id="ep-sup">
+            <option value="">— بدون مورد —</option>
+            ${DB.suppliers.map(s => `<option value="${s.id}" ${s.id === purchase.supplier_id ? 'selected' : ''}>${s.name}</option>`).join('')}
+        </select></div>
+        <div class="ff"><label>الإجمالي</label>
+        <input id="ep-total" type="number" value="${purchase.total_amount}"></div>
+        <div class="ff"><label>المدفوع</label>
+        <input id="ep-paid" type="number" value="${purchase.paid_amount}" oninput="updateEditPurchaseTotals()"></div>
+        <div id="ep-items" style="grid-column:1/-1;border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:10px">
+            ${purchase.items.map((item, idx) => `
+                <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:5px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+                    <input class="ep-prod" type="text" value="${item.product_name}" readonly style="grid-column:1">
+                    <input class="ep-qty" type="number" value="${item.quantity}" style="grid-column:2">
+                    <input class="ep-price" type="number" value="${item.unit_price}" style="grid-column:3">
+                    <button class="btn btn-danger btn-sm" onclick="removePurchaseItem(${idx})" style="grid-column:5">🗑️</button>
+                </div>
+            `).join('')}
+        </div>
+        <button class="btn btn-ghost btn-sm" style="grid-column:1/-1" onclick="addEditPurchaseItem()">+ إضافة صنف</button>
+    </div>`,
+    `<button class="btn btn-ghost" onclick="cmo()">إلغاء</button><button class="btn btn-success" onclick="updatePurchase(${id})">💾 حفظ التعديلات</button>`);
+    updateEditPurchaseTotals();
+}
+
+function deleteMobilePurchase() {
+    const selectedRow = document.querySelector('.purchase-row.selected');
+    if (!selectedRow) {
+        toast('⚠️ يرجى اختيار فاتورة للحذف', 'error');
+        return;
+    }
+
+    const id = parseInt(selectedRow.dataset.id);
+    const purchase = DB.purchases.find(p => p.id === id);
+
+    if (!purchase) {
+        toast('⚠️ لم يتم العثور على الفاتورة', 'error');
+        return;
+    }
+
+    if (!confirm(`⚠️ تأكيد الحذف\n\nهل أنت متأكد من حذف هذه الفاتورة؟\n\n⚠️ سيتم حذف الفاتورة كاملة وجميع المنتجات المرتبطة بها!`)) {
+        return;
+    }
+
+    // حذف المنتجات من المخزون
+    if (purchase.items) {
+        purchase.items.forEach(item => {
+            const product = DB.products.find(p => p.id === item.product_id);
+            if (product) {
+                product.quantity -= item.quantity;
+            }
+        });
+    }
+
+    // حذف الفاتورة
+    DB.purchases = DB.purchases.filter(p => p.id !== id);
+    DB.savePurchases();
+    DB.saveProducts();
+
+    toast('✅ تم حذف الفاتورة بنجاح');
+    refreshMobilePayments();
+}
+
+function clearMobilePurchases() {
+    if (!confirm('⚠️ تأكيد حذف الجميع\n\nهل أنت متأكد من حذف جميع فواتير المشتريات؟\n\n⚠️ هذه العملية لا يمكن التراجع عنها!')) {
+        return;
+    }
+
+    DB.purchases = DB.purchases.filter(p => p.source !== 'mobile');
+    DB.savePurchases();
+    toast('✅ تم حذف جميع فواتير المشتريات بنجاح');
+    refreshMobilePurchases();
+}
+
+function savePurchase() {
+    const supplierId = document.getElementById('mp-sup').value || null;
+    const total = parseFloat(document.getElementById('mp-total').value) || 0;
+    const paid = parseFloat(document.getElementById('mp-paid').value) || 0;
+    const itemsContainer = document.getElementById('mp-items');
+
+    // الحصول على المنتجات المضافة
+    const itemRows = itemsContainer.querySelectorAll('.purchase-item-row');
+    const items = Array.from(itemRows).map(row => {
+        const productId = row.dataset.productId;
+        const product = DB.products.find(p => p.id === parseInt(productId));
+        return {
+            product_id: parseInt(productId),
+            product_name: product ? product.name : 'غير معروف',
+            quantity: parseInt(row.querySelector('.pi-qty').value) || 1,
+            unit_price: parseFloat(row.querySelector('.pi-price').value) || 0,
+            total_price: (parseInt(row.querySelector('.pi-qty').value) || 1) * (parseFloat(row.querySelector('.pi-price').value) || 0),
+            cost_price: product ? product.cost_price : 0,
+            sell_price: product ? product.selling_price : 0
+        };
+    });
+
+    if (items.length === 0) {
+        toast('⚠️ أضف منتجات أولاً', 'error');
+        return;
+    }
+
+    const purchase = {
+        id: Date.now(),
+        invoice_number: 'PUR-' + Date.now().toString().slice(-6),
+        supplier_id: supplierId,
+        total_amount: total,
+        paid_amount: paid,
+        remaining_amount: total - paid,
+        purchase_date: new Date().toISOString().split('T')[0],
+        items: items,
+        source: 'mobile'
+    };
+
+    // تحديث مخزون المنتجات
+    items.forEach(item => {
+        const product = DB.products.find(p => p.id === item.product_id);
+        if (product) {
+            product.quantity += item.quantity;
+            if (item.sell_price > 0) {
+                product.selling_price = item.sell_price;
+            }
+            if (item.cost_price > 0) {
+                product.cost_price = item.cost_price;
+            }
+        }
+    });
+
+    DB.purchases.push(purchase);
+    DB.savePurchases();
+    DB.saveProducts();
+
+    toast('✅ تم حفظ الفاتورة بنجاح');
+    cmo();
+    refreshMobilePurchases();
+}
+
+function addPurchaseItem() {
+    const container = document.getElementById('mp-items');
+    const productSelect = document.createElement('div');
+    productSelect.className = 'purchase-item-row';
+    productSelect.style.cssText = 'display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:5px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)';
+    productSelect.innerHTML = `
+        <select class="pi-prod" style="grid-column:1" onchange="onPurchaseProductChange(this)">
+            <option value="">اختر منتج...</option>
+            ${DB.products.filter(p => p.category === 'موبايلات').map(p => `<option value="${p.id}" data-name="${p.name}" data-cost="${p.cost_price}" data-sell="${p.selling_price}">${p.name} | ${p.brand}</option>`).join('')}
+        </select>
+        <input class="pi-qty" type="number" value="1" min="1" style="grid-column:2" placeholder="الكمية">
+        <input class="pi-price" type="number" value="0" min="0" step="0.01" style="grid-column:3" placeholder="سعر الشراء">
+        <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="grid-column:5">🗑️</button>
+    `;
+    container.appendChild(productSelect);
+    updatePurchaseTotals();
+}
+
+function onPurchaseProductChange(select) {
+    const productId = select.value;
+    if (!productId) return;
+
+    const product = DB.products.find(p => p.id === parseInt(productId));
+    if (!product) return;
+
+    const row = select.closest('.purchase-item-row');
+    const priceInput = row.querySelector('.pi-price');
+    priceInput.value = product.cost_price;
+    updatePurchaseTotals();
+}
+
+function payMobileRemaining() {
+    const selectedRow = document.querySelector('.mobile-payment-row.selected');
+    if (!selectedRow) {
+        toast('⚠️ يرجى اختيار فاتورة للتسديد', 'error');
+        return;
+    }
+
+    const id = parseInt(selectedRow.dataset.id);
+    const purchase = DB.purchases.find(p => p.id === id);
+
+    if (!purchase) {
+        toast('⚠️ لم يتم العثور على الفاتورة', 'error');
+        return;
+    }
+
+    const remaining = purchase.remaining;
+
+    const amount = prompt(`المبلغ المتبقي: ${remaining}\n\nأدخل المبلغ المراد دفعه:`, remaining);
+
+    if (amount === null) return;
+
+    const payAmount = parseFloat(amount);
+
+    if (isNaN(payAmount) || payAmount <= 0) {
+        toast('⚠️ المبلغ غير صحيح', 'error');
+        return;
+    }
+
+    if (payAmount > remaining) {
+        toast('⚠️ المبلغ المدخل أكبر من الدين المتبقي', 'error');
+        return;
+    }
+
+    // تحديث الفاتورة
+    purchase.paid += payAmount;
+    purchase.remaining -= payAmount;
+
+    // إضافة سجل دفعة
+    const payment = {
+        id: Date.now(),
+        type: 'purchase',
+        reference_id: id,
+        amount: payAmount,
+        payment_date: new Date().toISOString().split('T')[0],
+        payment_method: 'نقدي',
+        user_id: DB.currentUser?.id || 1
+    };
+
+    DB.payments.push(payment);
+    DB.savePayments();
+    DB.savePurchases();
+
+    toast('✅ تمت عملية التسديد بنجاح');
+    refreshMobilePayments();
+}
+
+function deleteMobilePurchaseFromPayments() {
+    const selectedRow = document.querySelector('.mobile-payment-row.selected');
+    if (!selectedRow) {
+        toast('⚠️ يرجى اختيار فاتورة للحذف', 'error');
+        return;
+    }
+
+    if (!confirm('⚠️ تأكيد الحذف\n\nهل أنت متأكد من حذف هذه الفاتورة؟\n\n⚠️ سيتم حذف الفاتورة كاملة وجميع المنتجات المرتبطة بها!')) {
+        return;
+    }
+
+    const id = parseInt(selectedRow.dataset.id);
+    const purchase = DB.purchases.find(p => p.id === id);
+
+    if (!purchase) {
+        toast('⚠️ لم يتم العثور على الفاتورة', 'error');
+        return;
+    }
+
+    // حذف المنتجات من المخزون
+    if (purchase.items) {
+        purchase.items.forEach(item => {
+            const product = DB.products.find(p => p.id === item.product_id);
+            if (product) {
+                product.quantity -= item.quantity;
+            }
+        });
+    }
+
+    // حذف الفاتورة
+    DB.purchases = DB.purchases.filter(p => p.id !== id);
+    DB.savePurchases();
+    DB.saveProducts();
+
+    toast('✅ تم حذف الفاتورة بنجاح');
+    refreshMobilePayments();
+}
+
+function clearMobilePayments() {
+    if (!confirm('⚠️ تأكيد حذف الجميع\n\nهل أنت متأكد من حذف جميع الدفعات؟\n\n⚠️ هذه العملية لا يمكن التراجع عنها!')) {
+        return;
+    }
+
+    DB.payments = DB.payments.filter(p => p.type !== 'purchase');
+    DB.savePayments();
+    toast('✅ تم حذف جميع الدفعات بنجاح');
+    refreshMobilePayments();
+}
+
+function payMobileDebt() {
+    const selectedRow = document.querySelector('.mobile-debt-row.selected');
+    if (!selectedRow) {
+        toast('⚠️ يرجى اختيار دين للتسديد', 'error');
+        return;
+    }
+
+    const id = parseInt(selectedRow.dataset.id);
+    const sale = DB.sales.find(s => s.id === id);
+
+    if (!sale) {
+        toast('⚠️ لم يتم العثور على الدين', 'error');
+        return;
+    }
+
+    const remaining = sale.remaining;
+
+    const amount = prompt(`المبلغ المتبقي على العميل: ${remaining}\n\nأدخل المبلغ المستلم:`, remaining);
+
+    if (amount === null) return;
+
+    const payAmount = parseFloat(amount);
+
+    if (isNaN(payAmount) || payAmount <= 0 || payAmount > remaining) {
+        toast('⚠️ المبلغ غير صحيح', 'error');
+        return;
+    }
+
+    // تحديث الفاتورة
+    sale.paid += payAmount;
+    sale.remaining -= payAmount;
+
+    // إضافة حركة للصندوق كقبض دين
+    const payment = {
+        id: Date.now(),
+        type: 'sale_debt_payment',
+        reference_id: id,
+        amount: payAmount,
+        payment_date: new Date().toISOString().split('T')[0],
+        payment_method: 'نقدي',
+        user_id: DB.currentUser?.id || 1
+    };
+
+    DB.payments.push(payment);
+    DB.savePayments();
+    DB.saveSales();
+
+    toast('✅ تم تسديد الدين بنجاح');
+    refreshMobileDebts();
+}
+
+function addMobileDebt() {
+    const customerName = prompt('أدخل اسم العميل:');
+    if (!customerName) return;
+
+    const amount = prompt('أدخل المبلغ:');
+    if (!amount) return;
+
+    const debtAmount = parseFloat(amount);
+
+    if (isNaN(debtAmount) || debtAmount <= 0) {
+        toast('⚠️ المبلغ غير صحيح', 'error');
+        return;
+    }
+
+    const invoiceNum = `DEBT-${Date.now()}`;
+
+    const debt = {
+        id: Date.now(),
+        invoice_number: invoiceNum,
+        customer_name: customerName,
+        total_amount: debtAmount,
+        paid_amount: 0,
+        remaining_amount: debtAmount,
+        sale_date: new Date().toISOString().split('T')[0],
+        sale_time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+        status: 'active',
+        source: 'mobile'
+    };
+
+    DB.sales.push(debt);
+    DB.saveSales();
+
+    toast('✅ تم إضافة الدين بنجاح');
+    refreshMobileDebts();
+}
+
+function clearMobileDebts() {
+    if (!confirm('⚠️ تأكيد حذف الجميع\n\nهل أنت متأكد من حذف جميع الديون؟\n\n⚠️ هذه العملية لا يمكن التراجع عنها!')) {
+        return;
+    }
+
+    DB.sales = DB.sales.filter(s => s.source !== 'mobile');
+    DB.saveSales();
+    toast('✅ تم حذف جميع الديون بنجاح');
+    refreshMobileDebts();
+}
+
+function deleteCashTransaction() {
+    const selectedRow = document.querySelector('.mobile-cash-row.selected');
+    if (!selectedRow) {
+        toast('⚠️ يرجى اختيار معاملة للحذف', 'error');
+        return;
+    }
+
+    const values = selectedRow.dataset;
+    const transType = values.type;
+    const invoiceNum = values.invoice;
+
+    if (!confirm(`⚠️ تأكيد الحذف\n\nهل أنت متأكد من حذف المعاملة؟\n\nالنوع: ${transType}\nرقم الفاتورة: ${invoiceNum}\nالمبلغ: ${values.amount}\n\n⚠️ تحذير: سيتم حذف الفاتورة كاملة وجميع المنتجات المرتبطة بها!`)) {
+        return;
+    }
+
+    if (transType === 'مبيعات' || transType === 'تسديد دين') {
+        // حذف فاتورة مبيعات
+        const sale = DB.sales.find(s => s.invoice_number === invoiceNum);
+        if (sale) {
+            // إرجاع الكميات إلى المخزون
+            if (sale.items) {
+                sale.items.forEach(item => {
+                    const product = DB.products.find(p => p.id === item.product_id);
+                    if (product) {
+                        product.quantity += item.quantity;
+                    }
+                });
+            }
+
+            // حذف الفاتورة
+            DB.sales = DB.sales.filter(s => s.id !== sale.id);
+            DB.saveSales();
+            DB.saveProducts();
+
+            toast('✅ تم حذف فاتورة المبيعات بنجاح وإرجاع المنتجات للمخزون');
+        }
+    } else if (transType === 'فاتورة شراء') {
+        // حذف فاتورة مشتريات
+        const purchase = DB.purchases.find(p => p.invoice_number === invoiceNum);
+        if (purchase) {
+            // حذف المنتجات من المخزون
+            if (purchase.items) {
+                purchase.items.forEach(item => {
+                    const product = DB.products.find(p => p.id === item.product_id);
+                    if (product) {
+                        DB.products = DB.products.filter(p => p.id !== item.product_id);
+                    }
+                });
+            }
+
+            // حذف الفاتورة
+            DB.purchases = DB.purchases.filter(p => p.id !== purchase.id);
+            DB.savePurchases();
+            DB.saveProducts();
+
+            toast('✅ تم حذف فاتورة المشتريات بنجاح وحذف المنتجات من المخزون');
+        }
+    }
+
+    refreshMobileCash();
+}
+
+function clearMobileCash() {
+    if (!confirm('⚠️ تأكيد حذف الجميع\n\nهل أنت متأكد من حذف جميع البيانات في الصندوق؟\n\n⚠️ هذه العملية لا يمكن التراجع عنها!')) {
+        return;
+    }
+
+    // حذف المبيعات
+    DB.sales = DB.sales.filter(s => s.source !== 'mobile');
+
+    // حذف المشتريات
+    DB.purchases = DB.purchases.filter(p => p.source !== 'mobile');
+
+    // حذف الدفعات
+    DB.payments = DB.payments.filter(p => 
+        p.type !== 'purchase' && 
+        p.type !== 'sale_debt_payment'
+    );
+
+    DB.saveSales();
+    DB.savePurchases();
+    DB.savePayments();
+
+    toast('✅ تم حذف البيانات وتصفير الأرصدة بنجاح');
+    refreshMobileCash();
+}
+
+function generateMobileReport() {
+    const c = document.getElementById('pc');
+
+    const html = `
+    <div class="tw">
+        <div class="th">
+            <h3>📊 التقرير التفصيلي لإدارة الموبايلات</h3>
+        </div>
+
+        <!-- فلاتر التقرير -->
+        <div class="sb-bar" style="margin: 15px;">
+            <select id="report-period" onchange="updateMobileReport()">
+                <option value="all">الكل</option>
+                <option value="today">اليوم</option>
+                <option value="thisMonth" selected>هذا الشهر</option>
+                <option value="custom">مخصص</option>
+            </select>
+
+            <div id="custom-date-range" style="display: none; gap: 10px; align-items: center;">
+                <label>من:</label>
+                <input type="date" id="report-from-date" style="padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg3); color: var(--text);">
+                <label>إلى:</label>
+                <input type="date" id="report-to-date" style="padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg3); color: var(--text);">
+            </div>
+
+            <label>الماركة:</label>
+            <input type="text" id="report-brand" placeholder="تصفية بالماركة" style="padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg3); color: var(--text);">
+
+            <button class="btn btn-sm" onclick="updateMobileReport()">تحديث التقرير</button>
+            <button class="btn btn-ghost btn-sm" onclick="mobile()">عودة</button>
+        </div>
+
+        <!-- ملخص التقرير -->
+        <div id="report-summary" style="margin: 15px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;"></div>
+
+        <!-- جدول التقرير -->
+        <div class="tw" style="margin: 15px;">
+            <div class="th">
+                <h3>📋 تفاصيل التقرير</h3>
+            </div>
+            <div id="report-table"></div>
+        </div>
+    </div>`;
+
+    c.innerHTML = html;
+
+    // إضافة مستمع لتغيير الفترة
+    document.getElementById('report-period').addEventListener('change', function() {
+        const customRange = document.getElementById('custom-date-range');
+        customRange.style.display = this.value === 'custom' ? 'flex' : 'none';
+    });
+
+    // تحميل التقرير الافتراضي
+    updateMobileReport();
+}
+
+function updateMobileReport() {
+    const period = document.getElementById('report-period').value;
+    const brandFilter = document.getElementById('report-brand').value.trim().toLowerCase();
+    let fromDate, toDate;
+
+    const today = new Date();
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    switch (period) {
+        case 'today':
+            fromDate = today.toISOString().split('T')[0];
+            toDate = fromDate;
+            break;
+        case 'thisMonth':
+            fromDate = firstDayOfMonth.toISOString().split('T')[0];
+            toDate = today.toISOString().split('T')[0];
+            break;
+        case 'custom':
+            fromDate = document.getElementById('report-from-date').value;
+            toDate = document.getElementById('report-to-date').value;
+            break;
+    }
+
+    // تصفية المنتجات (فئة موبايلات فقط)
+    let filtered = DB.products.filter(p => {
+        if (p.category !== 'موبايلات') return false;
+        if (p.is_deleted) return false;
+
+        const matchesBrand = !brandFilter || p.brand.toLowerCase().includes(brandFilter);
+        const matchesDate = (!fromDate || p.created_date >= fromDate) && 
+                           (!toDate || p.created_date <= toDate);
+
+        return matchesBrand && matchesDate;
+    });
+
+    // حساب الإحصائيات
+    let totalQty = 0;
+    let totalCost = 0;
+    let totalExpectedProfit = 0;
+
+    filtered.forEach(p => {
+        const totalC = p.quantity * p.cost_price;
+        const expProfit = p.quantity * (p.selling_price - p.cost_price);
+        const status = p.quantity > p.min_stock ? '✅ متوفر' : 
+                      p.quantity > 0 ? '⚠️ منخفض' : '❌ منتهي';
+
+        totalQty += p.quantity;
+        totalCost += totalC;
+        totalExpectedProfit += expProfit;
+    });
+
+    // جلب المبيعات الفعلية للموبايلات
+    const mobileSales = DB.sales.filter(s => s.source === 'mobile' && s.status === 'active');
+    const actualSalesProfit = mobileSales.reduce((sum, s) => {
+        if (s.items) {
+            return sum + s.items.reduce((itemSum, item) => {
+                const product = DB.products.find(p => p.id === item.product_id);
+                if (product && product.category === 'موبايلات') {
+                    return itemSum + (item.unit_price - item.cost_price) * item.quantity;
+                }
+                return itemSum;
+            }, 0);
+        }
+        return sum;
+    }, 0);
+
+    // عرض الملخص
+    const summaryHtml = `
+    <div style="background: var(--bg3); border-radius: 9px; padding: 14px; border-right: 4px solid var(--accent);">
+        <div style="font-size: 11px; color: var(--muted);">إجمالي الكمية</div>
+        <div style="font-size: 20px; font-weight: 900; color: var(--accent);">${totalQty}</div>
+    </div>
+    <div style="background: var(--bg3); border-radius: 9px; padding: 14px; border-right: 4px solid var(--warn);">
+        <div style="font-size: 11px; color: var(--muted);">قيمة المخزون (شراء)</div>
+        <div style="font-size: 20px; font-weight: 900; color: var(--warn);">${fmt(totalCost)}</div>
+    </div>
+    <div style="background: var(--bg3); border-radius: 9px; padding: 14px; border-right: 4px solid var(--accent2);">
+        <div style="font-size: 11px; color: var(--muted);">المبيعات المحققة</div>
+        <div style="font-size: 20px; font-weight: 900; color: var(--accent2);">${fmt(actualSalesProfit)}</div>
+    </div>
+    <div style="background: var(--bg3); border-radius: 9px; padding: 14px; border-right: 4px solid #a855f7;">
+        <div style="font-size: 11px; color: var(--muted);">الأرباح المتوقعة</div>
+        <div style="font-size: 20px; font-weight: 900; color: #a855f7;">${fmt(totalExpectedProfit)}</div>
+    </div>`;
+
+    document.getElementById('report-summary').innerHTML = summaryHtml;
+
+    // عرض الجدول
+    let tableHtml = '<table style="width: 100%; border-collapse: collapse;">';
+    tableHtml += '<thead><tr style="background: var(--bg3);">';
+    tableHtml += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">اسم الجهاز</th>';
+    tableHtml += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">الماركة</th>';
+    tableHtml += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">الكمية</th>';
+    tableHtml += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">سعر الشراء</th>';
+    tableHtml += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">سعر البيع</th>';
+    tableHtml += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">إجمالي التكلفة</th>';
+    tableHtml += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">ربح متوقع</th>';
+    tableHtml += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">الحالة</th>';
+    tableHtml += '</tr></thead><tbody>';
+
+    filtered.forEach(p => {
+        const totalC = p.quantity * p.cost_price;
+        const expProfit = p.quantity * (p.selling_price - p.cost_price);
+        const status = p.quantity > p.min_stock ? '✅ متوفر' : 
+                      p.quantity > 0 ? '⚠️ منخفض' : '❌ منتهي';
+
+        tableHtml += '<tr style="border-bottom: 1px solid var(--border);">';
+        tableHtml += `<td style="padding: 12px;">${p.name}</td>`;
+        tableHtml += `<td style="padding: 12px;">${p.brand}</td>`;
+        tableHtml += `<td style="padding: 12px;">${p.quantity}</td>`;
+        tableHtml += `<td style="padding: 12px;">${fmt(p.cost_price)}</td>`;
+        tableHtml += `<td style="padding: 12px;">${fmt(p.selling_price)}</td>`;
+        tableHtml += `<td style="padding: 12px;">${fmt(totalC)}</td>`;
+        tableHtml += `<td style="padding: 12px;">${fmt(expProfit)}</td>`;
+        tableHtml += `<td style="padding: 12px;">${status}</td>`;
+        tableHtml += '</tr>';
+    });
+
+    tableHtml += '</tbody></table>';
+
+    if (filtered.length === 0) {
+        tableHtml += '<div style="text-align: center; padding: 40px; color: var(--muted);">لا توجد بيانات للفترة المحددة</div>';
+    }
+
+    document.getElementById('report-table').innerHTML = tableHtml;
+}
+
+// دالة إضافة طلب صيانة
+function addMaintenance() {
+    const customerName = document.getElementById('maint_customer_name').value.trim();
+    const phone = document.getElementById('maint_phone').value.trim();
+
+    if (!customerName || !phone) {
+        toast('⚠️ يرجى إدخال اسم العميل ورقم الهاتف', 'error');
+        return;
+    }
+
+    const newMaintenance = {
+        id: Date.now(),
+        customer_name: customerName,
+        phone: phone,
+        device_model: document.getElementById('maint_device_model').value.trim(),
+        problem: document.getElementById('maint_problem').value.trim(),
+        cost: parseFloat(document.getElementById('maint_cost').value) || 0,
+        selling_price: parseFloat(document.getElementById('maint_selling_price').value) || 0,
+        source: document.getElementById('maint_source').value.trim(),
+        profit_percent: parseFloat(document.getElementById('maint_profit_percent').value) || 100,
+        status: document.getElementById('maint_status').value,
+        date: new Date().toISOString().split('T')[0],
+        time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
+    };
+
+    const maintenance = DB.getMaintenance();
+    maintenance.push(newMaintenance);
+    DB.saveMaintenance(maintenance);
+
+    toast('✅ تم إضافة طلب الصيانة بنجاح');
+    clearMaintenanceFields();
+    refreshMaintenanceTable();
+}
+
+// دالة تعديل طلب صيانة
+function updateMaintenance() {
+    const selectedRow = document.querySelector('.maintenance-row.selected');
+    if (!selectedRow) {
+        toast('⚠️ يرجى اختيار طلب للتعديل', 'error');
+        return;
+    }
+
+    const id = parseInt(selectedRow.dataset.id);
+    const maintenance = DB.getMaintenance();
+    const index = maintenance.findIndex(m => m.id === id);
+
+    if (index === -1) {
+        toast('⚠️ لم يتم العثور على الطلب', 'error');
+        return;
+    }
+
+    maintenance[index] = {
+        ...maintenance[index],
+        customer_name: document.getElementById('maint_customer_name').value.trim(),
+        phone: document.getElementById('maint_phone').value.trim(),
+        device_model: document.getElementById('maint_device_model').value.trim(),
+        problem: document.getElementById('maint_problem').value.trim(),
+        cost: parseFloat(document.getElementById('maint_cost').value) || 0,
+        selling_price: parseFloat(document.getElementById('maint_selling_price').value) || 0,
+        source: document.getElementById('maint_source').value.trim(),
+        profit_percent: parseFloat(document.getElementById('maint_profit_percent').value) || 100,
+        status: document.getElementById('maint_status').value
+    };
+
+    DB.saveMaintenance();
+
+    toast('✅ تم تعديل الطلب بنجاح');
+    clearMaintenanceFields();
+    refreshMaintenanceTable();
+}
+
+// دالة حذف طلب صيانة
+function deleteMaintenance() {
+    const selectedRow = document.querySelector('.maintenance-row.selected');
+    if (!selectedRow) {
+        toast('⚠️ يرجى اختيار طلب للحذف', 'error');
+        return;
+    }
+
+    if (!confirm('⚠️ تأكيد الحذف\n\nهل أنت متأكد من حذف هذا الطلب؟')) {
+        return;
+    }
+
+    const id = parseInt(selectedRow.dataset.id);
+    const maintenance = DB.getMaintenance();
+    const filtered = maintenance.filter(m => m.id !== id);
+    localStorage.setItem(DB.getDBKey('maintenance'), JSON.stringify(filtered));
+
+    toast('✅ تم حذف الطلب بنجاح');
+    clearMaintenanceFields();
+    refreshMaintenanceTable();
+}
+
+// دالة حذف جميع طلبات الصيانة
+function deleteAllMaintenance() {
+    if (!confirm('⚠️ تأكيد حذف الجميع\n\nهل أنت متأكد من حذف جميع طلبات الصيانة؟\n\n⚠️ هذه العملية لا يمكن التراجع عنها!')) {
+        return;
+    }
+
+    localStorage.setItem(DB.getDBKey('maintenance'), JSON.stringify([]));
+
+    toast('✅ تم حذف جميع الطلبات بنجاح');
+    refreshMaintenanceTable();
+}
+
+// دالة تفريغ الحقول
+function clearMaintenanceFields() {
+    document.getElementById('maint_customer_name').value = '';
+    document.getElementById('maint_phone').value = '';
+    document.getElementById('maint_device_model').value = '';
+    document.getElementById('maint_problem').value = '';
+    document.getElementById('maint_cost').value = '';
+    document.getElementById('maint_selling_price').value = '';
+    document.getElementById('maint_source').value = '';
+    document.getElementById('maint_profit_percent').value = '100';
+    document.getElementById('maint_status').value = 'قيد الإصلاح';
+
+    // إزالة التحديد من الجدول
+    document.querySelectorAll('.maintenance-row.selected').forEach(row => {
+        row.classList.remove('selected');
+    });
+}
+
+// دالة تحديث جدول الصيانة
+function refreshMaintenanceTable() {
+    const searchTerm = document.getElementById('maint-search').value.trim().toLowerCase();
+    const fromDate = document.getElementById('maint-from-date').value;
+    const toDate = document.getElementById('maint-to-date').value;
+
+    let filtered = DB.getMaintenance().filter(m => {
+        const matchesSearch = !searchTerm || 
+            m.customer_name.toLowerCase().includes(searchTerm) ||
+            m.phone.includes(searchTerm) ||
+            m.device_model.toLowerCase().includes(searchTerm) ||
+            m.problem.toLowerCase().includes(searchTerm);
+
+        const matchesDate = (!fromDate || m.date >= fromDate) && 
+                           (!toDate || m.date <= toDate);
+
+        return matchesSearch && matchesDate;
+    });
+
+    // ترتيب حسب التاريخ (الأحدث أولاً)
+    filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    let totalCost = 0;
+    let totalProfit = 0;
+
+    let html = '<table style="width: 100%; border-collapse: collapse;">';
+    html += '<thead><tr style="background: var(--bg3);">';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">العميل</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">الهاتف</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">الجهاز</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">المشكلة</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">التكلفة</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">سعر البيع</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">الربح</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">الحالة</th>';
+    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">التاريخ</th>';
+    html += '</tr></thead><tbody>';
+
+    filtered.forEach(m => {
+        const rawProfit = m.selling_price - m.cost;
+        const actualProfit = rawProfit * (m.profit_percent / 100);
+
+        if (m.status === 'تم التسليم') {
+            totalCost += m.cost;
+            totalProfit += actualProfit;
+        }
+
+        const statusColors = {
+            'قيد الإصلاح': '#f39c12',
+            'تم الإصلاح': '#3498db',
+            'تم التسليم': '#2ecc71',
+            'لا يمكن الإصلاح': '#e74c3c'
+        };
+
+        html += `<tr class="maintenance-row" data-id="${m.id}" style="cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.2s;" onclick="selectMaintenanceRow(this)">`;
+        html += `<td style="padding: 12px;">${m.customer_name}</td>`;
+        html += `<td style="padding: 12px;">${m.phone}</td>`;
+        html += `<td style="padding: 12px;">${m.device_model}</td>`;
+        html += `<td style="padding: 12px;">${m.problem}</td>`;
+        html += `<td style="padding: 12px;">${m.cost.toFixed(2)}</td>`;
+        html += `<td style="padding: 12px;">${m.selling_price.toFixed(2)}</td>`;
+        html += `<td style="padding: 12px; color: ${actualProfit >= 0 ? '#2ecc71' : '#e74c3c'};">${actualProfit.toFixed(2)}</td>`;
+        html += `<td style="padding: 12px;"><span style="background: ${statusColors[m.status]}; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px;">${m.status}</span></td>`;
+        html += `<td style="padding: 12px;">${m.date}</td>`;
+        html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+
+    if (filtered.length === 0) {
+        html += '<div style="text-align: center; padding: 40px; color: var(--muted);">لا توجد طلبات صيانة</div>';
+    }
+
+    document.getElementById('maintenance-table').innerHTML = html;
+
+    // تحديث الملخص
+    const summaryHtml = `إجمالي تكاليف المسلم: ${totalCost.toFixed(2)} | إجمالي الأرباح: ${totalProfit.toFixed(2)}`;
+    const summaryEl = document.getElementById('maint-summary');
+    summaryEl.textContent = summaryHtml;
+    summaryEl.style.background = totalProfit >= 0 ? 'var(--accent2)' : 'var(--danger)';
+}
+
+// دالة تحديد صف في جدول الصيانة
+function selectMaintenanceRow(row) {
+    // إزالة التحديد من جميع الصفوف
+    document.querySelectorAll('.maintenance-row.selected').forEach(r => {
+        r.classList.remove('selected');
+        r.style.background = '';
+    });
+
+    // تحديد الصف المختار
+    row.classList.add('selected');
+    row.style.background = 'var(--bg3)';
+
+    // تحميل البيانات في الحقول
+    const id = parseInt(row.dataset.id);
+    const maintenance = DB.getMaintenance().find(m => m.id === id);
+
+    if (maintenance) {
+        document.getElementById('maint_customer_name').value = maintenance.customer_name;
+        document.getElementById('maint_phone').value = maintenance.phone;
+        document.getElementById('maint_device_model').value = maintenance.device_model;
+        document.getElementById('maint_problem').value = maintenance.problem;
+        document.getElementById('maint_cost').value = maintenance.cost;
+        document.getElementById('maint_selling_price').value = maintenance.selling_price;
+        document.getElementById('maint_source').value = maintenance.source;
+        document.getElementById('maint_profit_percent').value = maintenance.profit_percent;
+        document.getElementById('maint_status').value = maintenance.status;
+    }
+}
+
+// دالة حساب أرباح الصيانة
+function calculateMaintenanceProfits() {
+    const totalProfit = DB.getMaintenance()
+        .filter(m => m.status === 'تم التسليم')
+        .reduce((sum, m) => {
+            const rawProfit = m.selling_price - m.cost;
+            return sum + (rawProfit * (m.profit_percent / 100));
+        }, 0);
+
+    alert(`إجمالي أرباح الصيانة (للطلبات المسلمة): ${totalProfit.toFixed(2)}`);
+}
+
+// دالة عرض تقارير الصيانة
+function showMaintenanceReports() {
+    const c = document.getElementById('pc');
+
+    const html = `
+    <div class="tw">
+        <div class="th">
+            <h3>📊 تقارير صيانة الموبايلات</h3>
+        </div>
+
+        <!-- فلاتر التقارير -->
+        <div class="sb-bar" style="margin: 15px;">
+            <select id="report-period" onchange="updateMaintenanceReport()">
+                <option value="today">اليوم</option>
+                <option value="yesterday">أمس</option>
+                <option value="thisMonth" selected>هذا الشهر</option>
+                <option value="lastMonth">الشهر السابق</option>
+                <option value="custom">مخصص</option>
+            </select>
+
+            <div id="custom-date-range" style="display: none; gap: 10px; align-items: center;">
+                <label>من:</label>
+                <input type="date" id="report-from-date" style="padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg3); color: var(--text);">
+                <label>إلى:</label>
+                <input type="date" id="report-to-date" style="padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg3); color: var(--text);">
+            </div>
+
+            <button class="btn btn-sm" onclick="updateMaintenanceReport()">تحديث التقرير</button>
+            <button class="btn btn-ghost btn-sm" onclick="mobile()">عودة</button>
+        </div>
+
+        <!-- ملخص التقرير -->
+        <div id="report-summary" style="margin: 15px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;"></div>
+
+        <!-- جدول التقرير -->
+        <div class="tw" style="margin: 15px;">
+            <div class="th">
+                <h3>📋 تفاصيل التقرير</h3>
+            </div>
+            <div id="report-table"></div>
+        </div>
+    </div>`;
+
+    c.innerHTML = html;
+
+    // إضافة مستمع لتغيير الفترة
+    document.getElementById('report-period').addEventListener('change', function() {
+        const customRange = document.getElementById('custom-date-range');
+        customRange.style.display = this.value === 'custom' ? 'flex' : 'none';
+    });
+
+    // تحميل التقرير الافتراضي
+    updateMaintenanceReport();
+}
+
+// دالة تحديث تقرير الصيانة
+function updateMaintenanceReport() {
+    const period = document.getElementById('report-period').value;
+    let fromDate, toDate;
+
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    const firstDayOfLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const lastDayOfLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+
+    switch (period) {
+        case 'today':
+            fromDate = today.toISOString().split('T')[0];
+            toDate = fromDate;
+            break;
+        case 'yesterday':
+            fromDate = yesterday.toISOString().split('T')[0];
+            toDate = fromDate;
+            break;
+        case 'thisMonth':
+            fromDate = firstDayOfMonth.toISOString().split('T')[0];
+            toDate = lastDayOfMonth.toISOString().split('T')[0];
+            break;
+        case 'lastMonth':
+            fromDate = firstDayOfLastMonth.toISOString().split('T')[0];
+            toDate = lastDayOfLastMonth.toISOString().split('T')[0];
+            break;
+        case 'custom':
+            fromDate = document.getElementById('report-from-date').value;
+            toDate = document.getElementById('report-to-date').value;
+            break;
+    }
+
+    // تصفية البيانات حسب التاريخ
+    let filtered = DB.getMaintenance().filter(m => {
+        return m.date >= fromDate && m.date <= toDate;
+    });
+
+    // تجميع البيانات حسب التاريخ
+    const groupedByDate = {};
+    filtered.forEach(m => {
+        if (!groupedByDate[m.date]) {
+            groupedByDate[m.date] = {
+                count: 0,
+                totalCost: 0,
+                totalSales: 0,
+                totalProfit: 0
+            };
+        }
+
+        const rawProfit = m.selling_price - m.cost;
+        const actualProfit = rawProfit * (m.profit_percent / 100);
+
+        groupedByDate[m.date].count++;
+        groupedByDate[m.date].totalCost += m.cost;
+        groupedByDate[m.date].totalSales += m.selling_price;
+        groupedByDate[m.date].totalProfit += actualProfit;
+    });
+
+    // تحويل إلى مصفوفة وترتيبها حسب التاريخ
+    const reportData = Object.keys(groupedByDate)
+        .sort()
+        .map(date => ({
+            date: date,
+            ...groupedByDate[date]
+        }));
+
+    // حساب الإجماليات
+    const totalStats = {
+        totalCount: filtered.length,
+        totalCost: reportData.reduce((sum, d) => sum + d.totalCost, 0),
+        totalSales: reportData.reduce((sum, d) => sum + d.totalSales, 0),
+        totalProfit: reportData.reduce((sum, d) => sum + d.totalProfit, 0)
+    };
+
+    // عرض الملخص
+    const summaryHtml = `
+    <div style="background: var(--bg3); border-radius: 9px; padding: 14px; border-right: 4px solid var(--accent);">
+        <div style="font-size: 11px; color: var(--muted);">عدد الطلبات</div>
+        <div style="font-size: 20px; font-weight: 900; color: var(--accent);">${totalStats.totalCount}</div>
+    </div>
+    <div style="background: var(--bg3); border-radius: 9px; padding: 14px; border-right: 4px solid var(--warn);">
+        <div style="font-size: 11px; color: var(--muted);">إجمالي التكلفة</div>
+        <div style="font-size: 20px; font-weight: 900; color: var(--warn);">${fmt(totalStats.totalCost)}</div>
+    </div>
+    <div style="background: var(--bg3); border-radius: 9px; padding: 14px; border-right: 4px solid var(--accent2);">
+        <div style="font-size: 11px; color: var(--muted);">إجمالي المبيعات</div>
+        <div style="font-size: 20px; font-weight: 900; color: var(--accent2);">${fmt(totalStats.totalSales)}</div>
+    </div>
+    <div style="background: var(--bg3); border-radius: 9px; padding: 14px; border-right: 4px solid ${totalStats.totalProfit >= 0 ? '#2ecc71' : '#e74c3c'};">
+        <div style="font-size: 11px; color: var(--muted);">صافي الربح</div>
+        <div style="font-size: 20px; font-weight: 900; color: ${totalStats.totalProfit >= 0 ? '#2ecc71' : '#e74c3c'};">${fmt(totalStats.totalProfit)}</div>
+    </div>`;
+
+    document.getElementById('report-summary').innerHTML = summaryHtml;
+
+    // عرض الجدول
+    let tableHtml = '<table style="width: 100%; border-collapse: collapse;">';
+    tableHtml += '<thead><tr style="background: var(--bg3);">';
+    tableHtml += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">التاريخ</th>';
+    tableHtml += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">العدد</th>';
+    tableHtml += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">إجمالي التكلفة</th>';
+    tableHtml += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">إجمالي المبيعات</th>';
+    tableHtml += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">صافي الربح</th>';
+    tableHtml += '</tr></thead><tbody>';
+
+    reportData.forEach(row => {
+        tableHtml += '<tr style="border-bottom: 1px solid var(--border);">';
+        tableHtml += `<td style="padding: 12px;">${row.date}</td>`;
+        tableHtml += `<td style="padding: 12px;">${row.count}</td>`;
+        tableHtml += `<td style="padding: 12px;">${fmt(row.totalCost)}</td>`;
+        tableHtml += `<td style="padding: 12px;">${fmt(row.totalSales)}</td>`;
+        tableHtml += `<td style="padding: 12px; color: ${row.totalProfit >= 0 ? '#2ecc71' : '#e74c3c'};">${fmt(row.totalProfit)}</td>`;
+        tableHtml += '</tr>';
+    });
+
+    tableHtml += '</tbody></table>';
+
+    if (reportData.length === 0) {
+        tableHtml += '<div style="text-align: center; padding: 40px; color: var(--muted);">لا توجد بيانات للفترة المحددة</div>';
+    }
+
+    document.getElementById('report-table').innerHTML = tableHtml;
+}
+
+// تحميل بيانات الصيانة عند بدء التطبيق
+DB.loadMaintenance();
 function inventory(q = '', cat = 'الكل', st = 'الكل') {
     const c = document.getElementById('pc');
     const products = DB.products;
@@ -3063,6 +7324,7 @@ function inventory(q = '', cat = 'الكل', st = 'الكل') {
         </select>
         <button class="btn btn-success" onclick="addInvProd()">+ إضافة منتج</button>
         <button class="btn btn-warn" onclick="openInventoryCount()">📊 جرد</button>
+        <button class="btn btn-danger" onclick="deleteAllInventory()">🗑️ حذف الجميع</button>
     </div>
 
     <div id="inv-stats" class="sg"></div>
@@ -3152,9 +7414,10 @@ function inventory(q = '', cat = 'الكل', st = 'الكل') {
             const itemProfit = p.quantity * (p.selling_price - p.cost_price);
             const margin = p.selling_price - p.cost_price;
             const marginPct = p.cost_price > 0 ? Math.round(margin / p.cost_price * 100) : 0;
+            const productJson = JSON.stringify(p);
             return `<tr><td><b>${p.name}</b></td><td>${p.brand}</td><td>${p.category}</td><td style="font-size:11px;color:var(--muted);font-family:monospace">${p.barcode || '—'}</td><td>${fmt(p.cost_price)}</td><td style="color:var(--accent2)">${fmt(p.selling_price)}</td><td style="color:${margin >= 0 ? 'var(--accent2)' : 'var(--danger)'};font-size:12px">${margin >= 0 ? '+' : ''}${fmt(margin)} (${marginPct}%)</td>
             <td><span class="badge ${statusColor}">${p.quantity}</span></td><td style="color:var(--accent2);font-weight:700">${fmt(itemValue)}</td><td style="color:#a855f7;font-weight:700">${fmt(itemProfit)}</td><td>${status}</td>
-            <td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" title="تحديث سريع" onclick="quickUpdateQty(${p.id},'${p.name.replace(/'/g, '')}',${p.quantity})">⚡</button><button class="btn btn-ghost btn-sm" onclick='eInvProd(${JSON.stringify(p)})'>✏️</button> <button class="btn btn-danger btn-sm" onclick="dInvProd(${p.id},'${p.name.replace(/'/g, '')}')">🗑️</button></td></tr>`;
+            <td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" title="تحديث سريع" onclick="quickUpdateQty(${p.id},'${p.name.replace(/'/g, '')}',${p.quantity})">⚡</button><button class="btn btn-ghost btn-sm" onclick='eInvProd(${productJson})'>✏️</button> <button class="btn btn-danger btn-sm" onclick="dInvProd(${p.id},'${p.name.replace(/'/g, '')}')">🗑️</button></td></tr>`;
         }).join('')}</table>`
         : em('لا توجد منتجات');
 }
@@ -3186,6 +7449,7 @@ function renderInventoryTable(products) {
             const statusClass = p.quantity <= 0 ? 'br' : p.quantity <= p.min_stock ? 'bw' : 'bg';
             const statusText = p.quantity <= 0 ? 'نافد' : p.quantity <= p.min_stock ? 'منخفض' : 'متوفر';
             const value = p.cost_price * p.quantity;
+            const productJson = JSON.stringify(p);
 
             return `
             <tr>
@@ -3199,7 +7463,7 @@ function renderInventoryTable(products) {
                 <td>${fmt(value)}</td>
                 <td><span class="badge ${statusClass}">${statusText}</span></td>
                 <td style="white-space:nowrap">
-                    <button class="btn btn-ghost btn-sm" onclick='eInvProd(${JSON.stringify(p)})' title="تعديل">✏️</button>
+                    <button class="btn btn-ghost btn-sm" onclick='eInvProd(${productJson})' title="تعديل">✏️</button>
                     <button class="btn btn-warn btn-sm" onclick='adjInvStock(${p.id})' title="تعديل الكمية">📦</button>
                     <button class="btn btn-danger btn-sm" onclick="dInvProd(${p.id},'${p.name.replace(/'/g, '')}')" title="حذف">🗑️</button>
                 </td>
@@ -3428,6 +7692,51 @@ function openInventoryCount() {
     `, `<button class="btn btn-ghost" onclick="cmo()">إلغاء</button><button class="btn btn-success" onclick="doInventoryCount()">✅ تسجيل الجرد</button>`);
 }
 
+function deleteAllInventory() {
+    const allProducts = DB.products;
+
+    if (!allProducts.length) {
+        toast('لا توجد منتجات في المخزون', 'error');
+        return;
+    }
+
+    omo('🗑️ حذف جميع المنتجات من المخزون', `
+        <div class="fg">
+            <div class="ff full" style="background:rgba(255,71,87,.1);border:1px solid var(--danger);border-radius:8px;padding:15px;margin-bottom:15px">
+                <p style="color:var(--danger);font-size:14px;margin:0">
+                    ⚠️ هل أنت متأكد من حذف جميع المنتجات من المخزون؟
+                </p>
+                <p style="color:var(--danger);font-size:13px;margin:5px 0 0 0">
+                    عدد المنتجات: ${allProducts.length}
+                </p>
+                <p style="color:var(--danger);font-size:13px;margin:5px 0 0 0">
+                    ⚠️ هذه العملية لا يمكن التراجع عنها!
+                </p>
+            </div>
+        </div>
+    `, `
+        <button class="btn btn-ghost" onclick="cmo()">إلغاء</button>
+        <button class="btn btn-danger" onclick="confirmDeleteAllInventory()">🗑️ حذف جميع المنتجات</button>
+    `);
+}
+
+function confirmDeleteAllInventory() {
+    const allProducts = DB.products;
+
+    if (!allProducts.length) {
+        toast('لا توجد منتجات في المخزون', 'error');
+        cmo();
+        return;
+    }
+
+    // حذف جميع المنتجات
+    localStorage.setItem(DB.getDBKey('products'), JSON.stringify([]));
+
+    cmo();
+    toast(`✅ تم حذف ${allProducts.length} منتج من المخزون بنجاح`);
+    inventory();
+}
+
 function doInventoryCount() {
     const cat = document.getElementById('count-cat').value;
     const notes = document.getElementById('count-notes').value;
@@ -3465,6 +7774,317 @@ function doInventoryCount() {
     inventory();
 }
 
+// ============================================
+// إدارة الحسابات
+// ============================================
+function accounts() {
+    const c = document.getElementById('pc');
+    const currentAccount = DB.getCurrentAccount();
+    const allAccounts = DB.accounts;
+
+    c.innerHTML = `
+    <div class="tw">
+        <div class="th">
+            <h3>🏢 إدارة الحسابات</h3>
+            <button class="btn btn-success btn-sm" onclick="addAccount()">+ إضافة حساب</button>
+        </div>
+        <div style="padding:20px">
+            <div style="background:var(--bg3);padding:15px;border-radius:8px;margin-bottom:20px">
+                <h4 style="margin-bottom:10px;color:var(--accent)">الحساب الحالي</h4>
+                <p style="font-size:18px;font-weight:bold;margin-bottom:5px">${currentAccount?.name || 'غير محدد'}</p>
+                <p style="color:var(--muted);font-size:13px">معرف الحساب: ${currentAccount?.id || 'N/A'}</p>
+                <button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="changeAccountPassword()">🔑 تغيير كلمة المرور</button>
+            </div>
+            <div id="accounts-list">
+                ${allAccounts.map(acc => `
+                    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:15px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+                        <div>
+                            <b style="font-size:15px">${acc.name}</b>
+                            <p style="color:var(--muted);font-size:12px;margin-top:5px">
+                                معرف: ${acc.id} | 
+                                تاريخ الإنشاء: ${new Date(acc.created_at).toLocaleDateString('ar-SA')}
+                            </p>
+                        </div>
+                        <div style="display:flex;gap:5px">
+                            ${acc.id !== currentAccount?.id ? `
+                                <button class="btn btn-primary btn-sm" onclick="switchAccount('${acc.id}')">🔄 التبديل</button>
+                            ` : `
+                                <span class="badge bg">الحالي</span>
+                            `}
+                            ${acc.id !== 'default' ? `
+                                <button class="btn btn-danger btn-sm" onclick="deleteAccount('${acc.id}', '${acc.name.replace(/'/g, "\'")}')">🗑️</button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    </div>`;
+}
+
+function addAccount() {
+    omo('➕ إضافة حساب جديد', `
+        <div class="fg">
+            <div class="ff full">
+                <label>اسم الحساب *</label>
+                <input id="account-name" placeholder="مثال: فرع الرياض">
+            </div>
+            <div class="ff full">
+                <label>كلمة مرور الحساب *</label>
+                <input id="account-password" type="password" placeholder="كلمة مرور لحماية الحساب">
+            </div>
+            <div class="ff full">
+                <label>تأكيد كلمة المرور *</label>
+                <input id="account-password-confirm" type="password" placeholder="أعد إدخال كلمة المرور">
+            </div>
+        </div>
+    `, `
+        <button class="btn btn-ghost" onclick="cmo()">إلغاء</button>
+        <button class="btn btn-success" onclick="saveAccount()">💾 حفظ</button>
+    `);
+}
+
+function saveAccount() {
+    const name = document.getElementById('account-name').value.trim();
+    const password = document.getElementById('account-password').value.trim();
+    const passwordConfirm = document.getElementById('account-password-confirm').value.trim();
+
+    if (!name) {
+        toast('يرجى إدخال اسم الحساب', 'error');
+        return;
+    }
+
+    if (!password) {
+        toast('يرجى إدخال كلمة مرور الحساب', 'error');
+        return;
+    }
+
+    if (password.length < 4) {
+        toast('كلمة المرور يجب أن تكون 4 أحرف على الأقل', 'error');
+        return;
+    }
+
+    if (password !== passwordConfirm) {
+        toast('كلمات المرور غير متطابقة', 'error');
+        return;
+    }
+
+    const account = DB.saveAccount({ 
+        name,
+        password: btoa(password) // تشفير بسيط لكلمة المرور
+    });
+    cmo();
+    toast('✅ تم إضافة الحساب بنجاح');
+    accounts();
+}
+
+function changeAccountPassword() {
+    const currentAccount = DB.getCurrentAccount();
+    const isDefaultAccount = currentAccount?.id === 'default';
+
+    omo('🔑 تغيير كلمة مرور الحساب', `
+        <div class="fg">
+            <div class="ff full">
+                <label>اسم الحساب</label>
+                <input type="text" value="${currentAccount?.name}" disabled style="background:var(--bg);opacity:0.7">
+            </div>
+            ${!isDefaultAccount || currentAccount?.password ? `
+                <div class="ff full">
+                    <label>كلمة المرور الحالية *</label>
+                    <input id="current-password" type="password" placeholder="أدخل كلمة المرور الحالية">
+                </div>
+            ` : `
+                <div class="ff full" style="background:rgba(0,212,255,.1);border:1px solid var(--accent);border-radius:8px;padding:12px">
+                    <p style="color:var(--accent);font-size:13px;margin:0">
+                        ℹ️ أنت تقوم بتعيين كلمة مرور للحساب الافتراضي لأول مرة.
+                    </p>
+                </div>
+            `}
+            <div class="ff full">
+                <label>كلمة المرور الجديدة *</label>
+                <input id="new-password" type="password" placeholder="أدخل كلمة المرور الجديدة">
+            </div>
+            <div class="ff full">
+                <label>تأكيد كلمة المرور الجديدة *</label>
+                <input id="new-password-confirm" type="password" placeholder="أعد إدخال كلمة المرور الجديدة">
+            </div>
+        </div>
+    `, `
+        <button class="btn btn-ghost" onclick="cmo()">إلغاء</button>
+        <button class="btn btn-success" onclick="saveAccountPasswordChange()">💾 حفظ التغييرات</button>
+    `);
+}
+
+function saveAccountPasswordChange() {
+    const newPassword = document.getElementById('new-password').value.trim();
+    const newPasswordConfirm = document.getElementById('new-password-confirm').value.trim();
+    const currentAccount = DB.getCurrentAccount();
+    const isDefaultAccount = currentAccount?.id === 'default';
+
+    // إذا كان الحساب الافتراضي وله كلمة مرور، أو حساب آخر، تحقق من كلمة المرور الحالية
+    if (!isDefaultAccount || currentAccount?.password) {
+        const currentPassword = document.getElementById('current-password')?.value.trim();
+
+        if (!currentPassword) {
+            toast('يرجى إدخال كلمة المرور الحالية', 'error');
+            return;
+        }
+
+        // التحقق من كلمة المرور الحالية
+        if (btoa(currentPassword) !== currentAccount.password) {
+            toast('كلمة المرور الحالية غير صحيحة', 'error');
+            return;
+        }
+    }
+
+    if (!newPassword) {
+        toast('يرجى إدخال كلمة المرور الجديدة', 'error');
+        return;
+    }
+
+    if (newPassword.length < 4) {
+        toast('كلمة المرور الجديدة يجب أن تكون 4 أحرف على الأقل', 'error');
+        return;
+    }
+
+    if (newPassword !== newPasswordConfirm) {
+        toast('كلمات المرور الجديدة غير متطابقة', 'error');
+        return;
+    }
+
+    // تحديث كلمة المرور
+    const accounts = DB.accounts;
+    const index = accounts.findIndex(a => a.id === currentAccount.id);
+    if (index !== -1) {
+        accounts[index].password = btoa(newPassword);
+        localStorage.setItem('mostamer_accounts', JSON.stringify(accounts));
+        cmo();
+        toast('✅ تم تغيير كلمة المرور بنجاح');
+        accounts();
+    }
+}
+
+function switchAccount(accountId) {
+    const account = DB.accounts.find(a => a.id === accountId);
+
+    // إذا كان الحساب الافتراضي، لا نحتاج كلمة مرور
+    if (accountId === 'default') {
+        if (confirm('هل تريد التبديل إلى الحساب الافتراضي؟ سيتم تسجيل الخروج من الحساب الحالي.')) {
+            if (DB.switchAccount(accountId)) {
+                Auth.logout();
+                location.reload();
+            }
+        }
+        return;
+    }
+
+    // طلب كلمة المرور للحسابات المحمية
+    omo('🔐 التبديل إلى الحساب', `
+        <div class="fg">
+            <div class="ff full">
+                <label>اسم الحساب</label>
+                <input type="text" value="${account?.name}" disabled style="background:var(--bg);opacity:0.7">
+            </div>
+            <div class="ff full">
+                <label>كلمة مرور الحساب *</label>
+                <input id="account-switch-password" type="password" placeholder="أدخل كلمة مرور الحساب">
+            </div>
+        </div>
+    `, `
+        <button class="btn btn-ghost" onclick="cmo()">إلغاء</button>
+        <button class="btn btn-success" onclick="confirmSwitchAccount('${accountId}')">🔄 التبديل</button>
+    `);
+}
+
+function confirmSwitchAccount(accountId) {
+    const enteredPassword = document.getElementById('account-switch-password').value.trim();
+    const account = DB.accounts.find(a => a.id === accountId);
+
+    if (!enteredPassword) {
+        toast('يرجى إدخال كلمة المرور', 'error');
+        return;
+    }
+
+    // التحقق من كلمة المرور
+    if (btoa(enteredPassword) !== account.password) {
+        toast('كلمة المرور غير صحيحة', 'error');
+        return;
+    }
+
+    cmo();
+    if (DB.switchAccount(accountId)) {
+        Auth.logout();
+        location.reload();
+    }
+}
+
+function deleteAccount(accountId, accountName) {
+    const account = DB.accounts.find(a => a.id === accountId);
+    const currentAccount = DB.getCurrentAccount();
+    const isDefaultAccount = currentAccount?.id === 'default';
+
+    omo('🗑️ حذف الحساب', `
+        <div class="fg">
+            <div class="ff full">
+                <label>اسم الحساب</label>
+                <input type="text" value="${accountName}" disabled style="background:var(--bg);opacity:0.7">
+            </div>
+            ${!isDefaultAccount ? `
+                <div class="ff full">
+                    <label>كلمة مرور الحساب *</label>
+                    <input id="account-delete-password" type="password" placeholder="أدخل كلمة مرور الحساب للتأكيد">
+                </div>
+            ` : `
+                <div class="ff full" style="background:rgba(0,212,255,.1);border:1px solid var(--accent);border-radius:8px;padding:12px">
+                    <p style="color:var(--accent);font-size:13px;margin:0">
+                        ℹ️ أنت مسجل في الحساب الافتراضي، يمكنك حذف الحسابات الأخرى مباشرة.
+                    </p>
+                </div>
+            `}
+            <div class="ff full" style="background:rgba(255,71,87,.1);border:1px solid var(--danger);border-radius:8px;padding:12px">
+                <p style="color:var(--danger);font-size:13px;margin:0">
+                    ⚠️ سيتم حذف جميع البيانات المرتبطة بهذا الحساب بشكل دائم ولا يمكن استعادتها.
+                </p>
+            </div>
+        </div>
+    `, `
+        <button class="btn btn-ghost" onclick="cmo()">إلغاء</button>
+        <button class="btn btn-danger" onclick="confirmDeleteAccount('${accountId}', '${accountName.replace(/'/g, "\'")}', true)">🗑️ حذف نهائي</button>
+    `);
+}
+
+function confirmDeleteAccount(accountId, accountName, isDefaultAccount) {
+    const account = DB.accounts.find(a => a.id === accountId);
+
+    // إذا لم يكن الحساب الافتراضي، تحقق من كلمة المرور
+    if (!isDefaultAccount) {
+        const enteredPassword = document.getElementById('account-delete-password').value.trim();
+
+        if (!enteredPassword) {
+            toast('يرجى إدخال كلمة المرور', 'error');
+            return;
+        }
+
+        // التحقق من كلمة المرور
+        if (btoa(enteredPassword) !== account.password) {
+            toast('كلمة المرور غير صحيحة', 'error');
+            return;
+        }
+    }
+
+    if (!confirm(`هل أنت متأكد تماماً من حذف حساب "${accountName}"؟
+
+⚠️ هذه العملية لا يمكن التراجع عنها!`)) {
+        return;
+    }
+
+    if (DB.deleteAccount(accountId)) {
+        cmo();
+        toast('✅ تم حذف الحساب بنجاح');
+        accounts();
+    }
+}
+
 function license() {
     const c = document.getElementById('pc');
     c.innerHTML = `
@@ -3485,25 +8105,99 @@ function license() {
 }
 
 // ============================================
+// دالة التنقل بين الصفحات
+// ============================================
+function go(name) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelector(`[data-p="${name}"]`)?.classList.add('active');
+    document.getElementById('page-title').textContent = TITLES[name] || name;
+
+    const fns = {
+        dashboard,
+        products,
+        sales,
+        purchases,
+        pos,
+        suppliers,
+        customers,
+        expenses,
+        maintenance,
+        reports,
+        currency,
+        barcode_sale,
+        barcode_return,
+        count,
+        mobile,
+        users,
+        accounts,
+        license,
+        settings,
+        inventory
+    };
+
+    if (fns[name]) {
+        fns[name]();
+    } else {
+        document.getElementById('pc').innerHTML = `<div class="tw"><div class="th"><h3>${name}</h3></div><div style="padding:20px">✅ قسم ${TITLES[name] || name} - جاهز للاستخدام</div></div>`;
+    }
+}
+
+// ============================================
 // تهيئة التطبيق
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
     // تهيئة قاعدة البيانات
     DB.init();
 
-    // التحقق من الجلسة
-    if (Auth.checkSession()) {
+    // دوال مساعدة لإدارة الفواتير
+    function updatePurchaseTotals() {
+        const itemRows = document.querySelectorAll('.purchase-item-row');
+    let total = 0;
+
+    itemRows.forEach(row => {
+        const qty = parseFloat(row.querySelector('.pi-qty').value) || 0;
+        const price = parseFloat(row.querySelector('.pi-price').value) || 0;
+        total += qty * price;
+    });
+
+    document.getElementById('mp-total').value = total;
+    }
+
+    function removePurchaseItem(row) {
+        row.remove();
+        updatePurchaseTotals();
+    }
+
+    function updateEditPurchaseTotals() {
+        const itemRows = document.querySelectorAll('.edit-purchase-item-row');
+        let total = 0;
+
+        itemRows.forEach(row => {
+            const qty = parseFloat(row.querySelector('.epi-qty').value) || 0;
+            const price = parseFloat(row.querySelector('.epi-price').value) || 0;
+            total += qty * price;
+        });
+
+        document.getElementById('ep-total').value = total;
+    }
+
+    function removeEditPurchaseItem(row) {
+        row.remove();
+        updateEditPurchaseTotals();
+    }
+
+    // تسجيل الدخول التلقائي
+    const autoLogin = Auth.login('admin', 'admin123');
+    if (autoLogin) {
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('app').style.display = 'flex';
         document.getElementById('u-name').textContent = Auth.currentUser.name;
         document.getElementById('sb-user').textContent = 'مرحباً، ' + Auth.currentUser.name;
+
+        // عرض معلومات الحساب الحالي
+        const currentAccount = DB.getCurrentAccount();
+        document.getElementById('sb-account').textContent = '🏢 ' + (currentAccount?.name || 'الحساب الافتراضي');
+
         go('dashboard');
     }
-
-    // الاستماع لضغط Enter في شاشة تسجيل الدخول
-    document.addEventListener('keydown', e => {
-        if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') {
-            doLogin();
-        }
-    });
 });
