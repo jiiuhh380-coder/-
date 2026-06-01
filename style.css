@@ -1,0 +1,6033 @@
+
+/* ===== المتغيرات العامة ===== */
+:root {
+    --primary: #1a73e8;
+    --primary-dark: #1557b0;
+    --primary-light: #e8f0fe;
+    --secondary: #e8710a;
+    --secondary-light: #fef3e2;
+    --success: #0d9e5f;
+    --success-light: #e6f4ec;
+    --danger: #d93025;
+    --bg: #f5f7fa;
+    --white: #ffffff;
+    --text: #202124;
+    --text-secondary: #5f6368;
+    --text-light: #9aa0a6;
+    --border: #dadce0;
+    --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --font-size-base: 17px;
+    --font-size-sm: 14px;
+    --font-size-lg: 20px;
+    --font-size-xl: 24px;
+    --font-size-2xl: 30px;
+    --font-size-3xl: 36px;
+    --card-bg: #1A1A1A;
+    --card-outline: #D4AF37;
+}
+
+/* ===== الأساسيات ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Cairo', sans-serif;
+    background: transparent;
+    background-image: url('../الوان.png');
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    direction: rtl;
+    font-size: var(--font-size-base);
+}
+
+/* ===== خلفية خضراء أنيقة لواجهات الزبون والإدارة وصاحب الشركة ===== */
+#customer-screen,
+#admin-screen,
+#owner-screen {
+    color: #ffffff;
+}
+
+/* جميع النصوص بيضاء */
+#customer-screen *,
+#admin-screen *,
+#owner-screen * {
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* العناصر التي يجب أن تبقى بيضاء (أزرار رئيسية، شارات) */
+#customer-screen .btn-confirm-booking,
+#customer-screen .booking-action-btn,
+#owner-screen .btn-confirm-booking,
+#owner-screen .booking-action-btn,
+#customer-screen button[class*="btn"]:not(.back-btn):not(.customer-tab),
+#owner-screen button[class*="btn"]:not(.back-btn) {
+    color: #ffffff !important;
+}
+
+/* الحاويات الرئيسية شفافة لإظهار خلفية الصورة */
+#customer-screen,
+#admin-screen,
+#owner-screen,
+#customer-screen .customer-container,
+#admin-screen .admin-container,
+#owner-screen .owner-container,
+#customer-screen .customer-tabs-content,
+#owner-screen .owner-dashboard,
+#customer-screen .tab-panel,
+#owner-screen .tab-panel,
+#customer-screen .booking-steps,
+#customer-screen .steps-content,
+#customer-screen .step-content,
+#customer-screen .seat-continue-section,
+#customer-screen .all-trips-wrapper,
+#customer-screen .route-search-results,
+#customer-screen .my-bookings-panel,
+#owner-screen .owner-select-section,
+#owner-screen .owner-filter-bar,
+#owner-screen .owner-bookings-list,
+#customer-screen fieldset,
+#admin-screen fieldset,
+#owner-screen fieldset {
+    background: transparent !important;
+    backdrop-filter: none !important;
+}
+
+/* جميع العناصر شفافة بدون مربعات - مع استثناء البانر والبطاقات */
+#customer-screen div:not(.company-banner):not(.company-banner-bg):not(.company-banner-overlay):not(.company-banner-content):not(.all-trip-card):not(.trip-card):not(.filtered-trip-card):not(.route-result-card):not(.company-card):not(.city-card):not(.garage-card):not(.payment-card):not(.shamcash-card):not(.garage-pay-card):not(.trip-details-card):not(.detail-item):not(.legend-item):not(.trip-meta-item):not(.account-card):not(.owner-stat-card):not(.booking-card):not(.booking-extra-item):not(.owner-company-select-card):not(.modal-box):not(.customer-details-modal-box):not(.cd-info-card):not(.cd-trip-route-card):not(.confirmation-card):not(.conf-route-card):not(.conf-detail-item):not(.mbp-card):not(.tab-panel):not(.all-company-card):not(.my-bookings-panel):not(.seat-map-container):not(.bus-layout):not(.seat-selection-info):not(.seat):not(.customer-form):not(.payment-options):not(.shamcash-details):not(.garage-pay-details):not(.shamcash-body):not(.payment-instructions):not(.account-number),
+#admin-screen div:not(.company-banner):not(.company-banner-bg):not(.company-banner-overlay):not(.company-banner-content):not(.all-trip-card):not(.trip-card):not(.filtered-trip-card):not(.route-result-card):not(.company-card):not(.city-card):not(.garage-card):not(.payment-card):not(.shamcash-card):not(.garage-pay-card):not(.trip-details-card):not(.detail-item):not(.legend-item):not(.trip-meta-item):not(.account-card):not(.owner-stat-card):not(.booking-card):not(.booking-extra-item):not(.owner-company-select-card):not(.modal-box):not(.customer-details-modal-box):not(.cd-info-card):not(.cd-trip-route-card):not(.confirmation-card):not(.conf-route-card):not(.conf-detail-item):not(.mbp-card):not(.tab-panel):not(.all-company-card):not(.my-bookings-panel):not(.seat-map-container):not(.bus-layout):not(.seat-selection-info):not(.seat):not(.customer-form):not(.payment-options):not(.shamcash-details):not(.garage-pay-details):not(.shamcash-body):not(.payment-instructions):not(.account-number),
+#owner-screen div:not(.company-banner):not(.company-banner-bg):not(.company-banner-overlay):not(.company-banner-content):not(.all-trip-card):not(.trip-card):not(.filtered-trip-card):not(.route-result-card):not(.company-card):not(.city-card):not(.garage-card):not(.payment-card):not(.shamcash-card):not(.garage-pay-card):not(.trip-details-card):not(.detail-item):not(.legend-item):not(.trip-meta-item):not(.account-card):not(.owner-stat-card):not(.booking-card):not(.booking-extra-item):not(.owner-company-select-card):not(.modal-box):not(.customer-details-modal-box):not(.cd-info-card):not(.cd-trip-route-card):not(.confirmation-card):not(.conf-route-card):not(.conf-detail-item):not(.mbp-card):not(.tab-panel):not(.all-company-card):not(.my-bookings-panel):not(.seat-map-container):not(.bus-layout):not(.seat-selection-info):not(.seat):not(.customer-form):not(.payment-options):not(.shamcash-details):not(.garage-pay-details):not(.shamcash-body):not(.payment-instructions):not(.account-number),
+#customer-screen section,
+#admin-screen section,
+#owner-screen section,
+#customer-screen ul,
+#admin-screen ul,
+#owner-screen ul,
+#customer-screen li,
+#admin-screen li,
+#owner-screen li {
+    background: transparent !important;
+    backdrop-filter: none !important;
+}
+
+/* بانر الشركة يحتفظ بخلفيته */
+#customer-screen .company-banner,
+#owner-screen .company-banner,
+#customer-screen .company-banner-overlay,
+#owner-screen .company-banner-overlay,
+#customer-screen .company-banner-content,
+#owner-screen .company-banner-content {
+    background: inherit !important;
+}
+
+#customer-screen .company-banner-content,
+#owner-screen .company-banner-content {
+    background: linear-gradient(transparent, rgba(0,0,0,0.6)) !important;
+}
+
+/* الهيدر */
+#customer-screen .customer-header,
+#admin-screen .customer-header,
+#owner-screen .customer-header,
+#owner-screen .owner-header {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    border-bottom: none !important;
+}
+
+/* التبويبات */
+#customer-screen .customer-tabs,
+#owner-screen .owner-select-section {
+    background: transparent !important;
+    backdrop-filter: none !important;
+}
+
+#customer-screen .customer-tab {
+    background: transparent !important;
+}
+
+#customer-screen .customer-tab.active {
+    background: transparent !important;
+}
+
+/* حقول الإدخال */
+#customer-screen input,
+#customer-screen select,
+#customer-screen textarea,
+#owner-screen input,
+#owner-screen select,
+#owner-screen textarea {
+    background: transparent !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4) !important;
+}
+
+#customer-screen input::placeholder,
+#customer-screen select::placeholder,
+#owner-screen input::placeholder,
+#owner-screen select::placeholder {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* زر العودة */
+#customer-screen .back-btn,
+#admin-screen .back-btn,
+#owner-screen .back-btn {
+    color: #ffffff !important;
+    background: transparent !important;
+}
+
+/* النوافذ المنبثقة */
+#customer-screen .modal-overlay,
+#admin-screen .modal-overlay,
+#owner-screen .modal-overlay {
+    background: rgba(0, 0, 0, 0.4) !important;
+}
+
+#customer-screen .modal-box,
+#admin-screen .modal-box,
+#owner-screen .modal-box {
+    background: rgba(0, 0, 0, 0.6) !important;
+    backdrop-filter: blur(20px);
+}
+
+/* مقاعد الحافلة */
+#customer-screen .seat,
+#owner-screen .seat {
+    color: #ffffff !important;
+}
+
+#customer-screen .seat.available,
+#owner-screen .seat.available {
+    background: rgba(13, 158, 95, 0.7) !important;
+}
+
+#customer-screen .seat.selected,
+#owner-screen .seat.selected {
+    background: #D4AF37 !important;
+    border: 2px solid #7f0000 !important;
+    color: #1A1A1A !important;
+}
+
+#customer-screen .seat.booked,
+#owner-screen .seat.booked {
+    background: #7f0000 !important;
+    border: 2px solid #D4AF37 !important;
+    color: #ffffff !important;
+}
+
+#customer-screen .seat.driver,
+#owner-screen .seat.driver {
+    background: rgba(95, 99, 104, 0.7) !important;
+}
+
+/* ===== جميع الأزرار ===== */
+#customer-screen button,
+#admin-screen button,
+#owner-screen button {
+    color: #ffffff !important;
+}
+
+/* الأزرار الرئيسية - أخضر */
+#customer-screen .btn-primary,
+#owner-screen .btn-primary {
+    background: linear-gradient(135deg, #1b5e20, #2e7d32) !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 4px 15px rgba(27, 94, 32, 0.4) !important;
+}
+
+#customer-screen .btn-primary:hover,
+#owner-screen .btn-primary:hover {
+    background: linear-gradient(135deg, #1b5e20, #1b5e20) !important;
+    box-shadow: 0 6px 20px rgba(27, 94, 32, 0.5) !important;
+}
+
+/* الأزرار الثانوية */
+#customer-screen .btn-secondary,
+#owner-screen .btn-secondary {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+    border: 2px solid rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(8px);
+}
+
+#customer-screen .btn-secondary:hover,
+#owner-screen .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.22) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* زر تأكيد الحجز */
+#customer-screen .btn-confirm-booking,
+#owner-screen .btn-confirm-booking {
+    background: linear-gradient(135deg, #2e7d32, #43a047) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 15px rgba(46, 125, 50, 0.4) !important;
+}
+
+#customer-screen .btn-confirm-booking:hover,
+#owner-screen .btn-confirm-booking:hover {
+    background: linear-gradient(135deg, #1b5e20, #2e7d32) !important;
+    box-shadow: 0 6px 20px rgba(46, 125, 50, 0.5) !important;
+}
+
+/* أزرار إجراءات الحجز */
+#customer-screen .confirm-action,
+#owner-screen .confirm-action {
+    background: rgba(27, 94, 32, 0.6) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(46, 125, 50, 0.4) !important;
+}
+
+#customer-screen .confirm-action:hover,
+#owner-screen .confirm-action:hover {
+    background: rgba(27, 94, 32, 0.85) !important;
+}
+
+#customer-screen .cancel-action,
+#owner-screen .cancel-action {
+    background: rgba(198, 40, 40, 0.6) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(229, 57, 53, 0.4) !important;
+}
+
+#customer-screen .cancel-action:hover,
+#owner-screen .cancel-action:hover {
+    background: rgba(198, 40, 40, 0.85) !important;
+}
+
+/* زر التفاصيل */
+#customer-screen .details-action,
+#owner-screen .details-action {
+    background: linear-gradient(135deg, #1b5e20, #2e7d32) !important;
+    color: #ffffff !important;
+}
+
+#customer-screen .details-action:hover,
+#owner-screen .details-action:hover {
+    background: linear-gradient(135deg, #1b5e20, #1b5e20) !important;
+}
+
+/* أزرار الإجراءات السريعة لصاحب الشركة */
+#owner-screen .quick-action-btn {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+    border: 2px solid rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(8px);
+}
+
+#owner-screen .quick-action-btn:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+
+#owner-screen .add-trip-btn {
+    background: rgba(27, 94, 32, 0.6) !important;
+    border-color: rgba(46, 125, 50, 0.4) !important;
+}
+
+#owner-screen .add-trip-btn:hover {
+    background: rgba(27, 94, 32, 0.85) !important;
+}
+
+#owner-screen .export-btn {
+    background: rgba(46, 125, 50, 0.5) !important;
+    border-color: rgba(46, 125, 50, 0.4) !important;
+}
+
+#owner-screen .export-btn:hover {
+    background: rgba(46, 125, 50, 0.75) !important;
+}
+
+#owner-screen .delete-all-btn {
+    background: rgba(198, 40, 40, 0.6) !important;
+    border-color: rgba(229, 57, 53, 0.4) !important;
+}
+
+#owner-screen .delete-all-btn:hover {
+    background: rgba(198, 40, 40, 0.85) !important;
+}
+
+/* زر حجوزاتي */
+#customer-screen .my-bookings-header-btn {
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* زر العودة لاختيار الشركة */
+#owner-screen .owner-back-to-companies {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+}
+
+#owner-screen .owner-back-to-companies:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* زر إعادة التعيين */
+#customer-screen .filter-reset-btn,
+#owner-screen .filter-reset-btn {
+    background: rgba(198, 40, 40, 0.6) !important;
+    color: #ffffff !important;
+    border: 2px solid rgba(229, 57, 53, 0.4) !important;
+}
+
+#customer-screen .filter-reset-btn:hover,
+#owner-screen .filter-reset-btn:hover {
+    background: rgba(198, 40, 40, 0.85) !important;
+}
+
+/* أزرار الدفع */
+#customer-screen .payment-card,
+#owner-screen .payment-card {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* زر متابعة اختيار المقاعد */
+#customer-screen .seat-continue-section .btn-primary {
+    background: linear-gradient(135deg, #1b5e20, #2e7d32) !important;
+    color: #ffffff !important;
+}
+
+/* تكبير الخطوط في جميع العناصر */
+h1, h2, h3 {
+    font-size: calc(var(--font-size-base) + 8px) !important;
+}
+h4, h5, h6 {
+    font-size: calc(var(--font-size-base) + 4px) !important;
+}
+p, span, label, a, li, td, th, input, select, textarea, button {
+    font-size: calc(var(--font-size-base) + 1px) !important;
+}
+.small-text, .text-sm, .trip-label, .legend-item span, .seat-number {
+    font-size: var(--font-size-sm) !important;
+}
+
+/* ===== الشاشات ===== */
+.screen {
+    display: none;
+    min-height: 100vh;
+    animation: fadeIn 0.4s ease;
+}
+
+.screen.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* ===== الشاشة الرئيسية ===== */
+.main-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    background-image: url('../الوان.png');
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    position: relative;
+    overflow: hidden;
+}
+
+.main-container::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -30%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+.main-container::after {
+    content: '';
+    position: absolute;
+    bottom: -40%;
+    left: -20%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+/* ===== قسم الشعار ===== */
+.logo-section {
+    text-align: center;
+    margin-bottom: 50px;
+    animation: slideUp 0.6s ease;
+    position: relative;
+    z-index: 1;
+}
+
+.logo-icon {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 20px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    animation: scaleIn 0.5s ease 0.2s both;
+}
+
+.logo-icon svg {
+    width: 80px;
+    height: 80px;
+}
+
+.app-title {
+    font-size: 42px;
+    font-weight: 900;
+    color: #ffffff;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.app-subtitle {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 400;
+}
+
+/* ===== بطاقات الحسابات ===== */
+.account-cards {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 40px;
+    animation: slideUp 0.6s ease 0.3s both;
+    position: relative;
+    z-index: 1;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.account-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: var(--radius);
+    padding: 30px 24px;
+    width: 200px;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+    border: 2px solid #D4AF37;
+}
+
+.account-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 4px;
+    border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.customer-card::before { background: #D4AF37; }
+.admin-card::before { background: #D4AF37; }
+.owner-card::before { background: #D4AF37; }
+
+.account-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-lg);
+}
+
+.customer-card:hover { border-color: #D4AF37; }
+.admin-card:hover { border-color: var(--secondary); }
+.owner-card:hover { border-color: #D4AF37; }
+
+.card-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+}
+
+.card-icon svg {
+    width: 64px;
+    height: 64px;
+}
+
+.account-card h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: #ffffff;
+}
+
+.account-card p {
+    font-size: 13px;
+    color: #ffffff;
+    margin-bottom: 12px;
+}
+
+.card-arrow {
+    font-size: 20px;
+    color: var(--text-light);
+    transition: var(--transition);
+}
+
+.customer-card:hover .card-arrow { color: var(--primary); }
+.admin-card:hover .card-arrow { color: var(--secondary); }
+.owner-card:hover .card-arrow { color: var(--success); }
+
+/* ===== نص الفوتر ===== */
+.footer-text {
+    position: relative;
+    z-index: 1;
+    animation: slideUp 0.6s ease 0.5s both;
+}
+
+.footer-text p {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 13px;
+}
+
+/* ===== شاشة الزبون ===== */
+.customer-container,
+.admin-container,
+.owner-container {
+    min-height: 100vh;
+    background: transparent;
+}
+
+/* ===== الهيدر ===== */
+.customer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: var(--white);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.customer-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text);
+    padding: 8px;
+    border-radius: 50%;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.back-btn:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.header-spacer {
+    width: 40px;
+}
+
+/* ===== مؤشر الخطوات ===== */
+.steps-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 20px;
+    background: var(--white);
+    margin-bottom: 8px;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    transition: var(--transition);
+}
+
+.step-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    background: var(--border);
+    color: var(--text-light);
+    transition: var(--transition);
+}
+
+.step.active .step-circle {
+    background: var(--primary);
+    color: var(--white);
+    box-shadow: 0 2px 10px rgba(26, 115, 232, 0.4);
+}
+
+.step.completed .step-circle {
+    background: var(--success);
+    color: var(--white);
+}
+
+.step span {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-light);
+}
+
+.step.active span {
+    color: var(--primary);
+}
+
+.step.completed span {
+    color: var(--success);
+}
+
+.step-line {
+    width: 50px;
+    height: 3px;
+    background: var(--border);
+    margin: 0 8px;
+    margin-bottom: 20px;
+    border-radius: 2px;
+    transition: var(--transition);
+}
+
+.step-line.active {
+    background: var(--primary);
+}
+
+/* ===== محتوى الخطوات ===== */
+.steps-content {
+    padding: 20px;
+}
+
+.step-content {
+    display: none;
+    animation: fadeIn 0.4s ease;
+}
+
+.step-content.active {
+    display: block;
+}
+
+.step-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.step-header h3 {
+    font-size: 24px;
+    font-weight: 800;
+    color: #D4AF37;
+    margin-bottom: 6px;
+}
+
+.step-header p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+}
+
+/* ===== شبكة المحافظات ===== */
+.cities-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 16px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.city-card {
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    padding: 24px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    border: 2px solid var(--border);
+    position: relative;
+    overflow: hidden;
+}
+
+.city-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    height: 3px;
+    background: var(--primary);
+    transform: scaleX(0);
+    transition: var(--transition);
+}
+
+.city-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow);
+    border-color: var(--primary);
+}
+
+.city-card:hover::after {
+    transform: scaleX(1);
+}
+
+.city-card.selected {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.city-card.selected::after {
+    transform: scaleX(1);
+}
+
+.city-icon {
+    font-size: 40px;
+    margin-bottom: 10px;
+}
+
+.city-card h4 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+/* ===== قائمة الكراجات ===== */
+.garages-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 600px;
+    margin: 0 auto 20px;
+}
+
+.garage-card {
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: var(--transition);
+    border: 2px solid var(--border);
+}
+
+.garage-card:hover {
+    transform: translateX(-4px);
+    box-shadow: var(--shadow);
+    border-color: var(--primary);
+}
+
+.garage-card.selected {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.garage-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--primary-light);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.garage-info {
+    flex: 1;
+}
+
+.garage-info h4 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 3px;
+}
+
+.garage-info p {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.garage-arrow {
+    color: var(--text-light);
+    font-size: 20px;
+    transition: var(--transition);
+}
+
+.garage-card:hover .garage-arrow {
+    color: var(--primary);
+    transform: translateX(-4px);
+}
+
+.no-garages {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+}
+
+.no-garages .no-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.no-garages p {
+    font-size: 15px;
+}
+
+/* ===== نموذج معلومات الزبون ===== */
+.customer-form {
+    max-width: 500px;
+    margin: 0 auto 20px;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(20px);
+    border: 2px solid #D4AF37;
+    border-radius: 16px;
+    padding: 24px;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #D4AF37;
+    margin-bottom: 8px;
+}
+
+.form-icon {
+    font-size: 18px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid rgba(212, 175, 55, 0.3);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-family: 'Cairo', sans-serif;
+    color: #fff;
+    background: rgba(255,255,255,0.06);
+    transition: var(--transition);
+    outline: none;
+}
+
+.form-group input::placeholder {
+    color: rgba(255,255,255,0.4);
+    font-size: 13px;
+}
+
+.form-group input:focus {
+    border-color: #D4AF37;
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+    background: rgba(212, 175, 55, 0.08);
+}
+
+.form-group input.error {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 3px rgba(217, 48, 37, 0.15);
+}
+
+.form-error {
+    background: #fce8e6;
+    border: 1px solid #f28b82;
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    color: var(--danger);
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 14px 24px;
+    background: linear-gradient(135deg, #D4AF37, #b8962e);
+    color: #1a1a1a;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'Cairo', sans-serif;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #e6c04a, #D4AF37);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+/* ===== خطوة الدفع ===== */
+.payment-options {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 600px;
+    margin: 0 auto 20px;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(20px);
+    border: 2px solid #D4AF37;
+    border-radius: 16px;
+    padding: 24px;
+}
+
+.payment-card {
+    background: rgba(255,255,255,0.06);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: var(--transition);
+    border: 2px solid rgba(212, 175, 55, 0.25);
+}
+
+.payment-card:hover {
+    transform: translateX(-4px);
+    box-shadow: 0 2px 8px rgba(212, 175, 55, 0.15);
+    border-color: #D4AF37;
+}
+
+.payment-card.selected {
+    border-color: #D4AF37;
+    background: rgba(212, 175, 55, 0.1);
+}
+
+.payment-radio {
+    flex-shrink: 0;
+}
+
+.radio-outer {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid rgba(212, 175, 55, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.payment-card.selected .radio-outer {
+    border-color: #D4AF37;
+}
+
+.radio-inner {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: transparent;
+    transition: var(--transition);
+}
+
+.payment-card.selected .radio-inner {
+    background: #D4AF37;
+}
+
+.payment-icon {
+    width: 55px;
+    height: 55px;
+    flex-shrink: 0;
+}
+
+.payment-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.payment-info {
+    flex: 1;
+}
+
+.payment-info h4 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #D4AF37;
+    margin-bottom: 3px;
+}
+
+.payment-info p {
+    font-size: 13px;
+    color: rgba(255,255,255,0.6);
+}
+
+/* ===== تفاصيل شام كاش ===== */
+.shamcash-details {
+    max-width: 600px;
+    margin: 0 auto 20px;
+    animation: fadeIn 0.4s ease;
+}
+
+.shamcash-card {
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 2px solid #D4AF37;
+}
+
+.shamcash-header {
+    background: rgba(0, 0, 0, 0.6);
+    border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.shamcash-badge {
+    color: #D4AF37;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.shamcash-amount {
+    color: #ff9800;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.shamcash-body {
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.account-field {
+    margin-bottom: 20px;
+}
+
+.account-field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 8px;
+}
+
+.account-number {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(212, 175, 55, 0.08);
+    border: 2px solid rgba(212, 175, 55, 0.3);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+}
+
+.account-number span {
+    font-size: 22px;
+    font-weight: 900;
+    color: #D4AF37;
+    letter-spacing: 3px;
+    flex: 1;
+    direction: ltr;
+    text-align: center;
+}
+
+.copy-btn {
+    background: rgba(212, 175, 55, 0.2);
+    border: 1px solid #D4AF37;
+    border-radius: 8px;
+    padding: 8px;
+    cursor: pointer;
+    color: #D4AF37;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.copy-btn:hover {
+    background: rgba(212, 175, 55, 0.35);
+    transform: scale(1.1);
+}
+
+.copy-btn.copied {
+    background: #2e7d32;
+}
+
+.payment-instructions {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+}
+
+.payment-instructions h5 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #D4AF37;
+    margin-bottom: 10px;
+}
+
+.payment-instructions ol {
+    padding-right: 20px;
+}
+
+.payment-instructions li {
+    font-size: 13px;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 6px;
+    line-height: 1.6;
+}
+
+/* ===== تفاصيل الدفع في الكراج ===== */
+.garage-pay-details {
+    max-width: 600px;
+    margin: 0 auto 20px;
+    animation: fadeIn 0.4s ease;
+}
+
+.garage-pay-card {
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius);
+    padding: 30px 20px;
+    text-align: center;
+    border: 2px solid #D4AF37;
+}
+
+.garage-pay-icon-large {
+    font-size: 50px;
+    margin-bottom: 12px;
+}
+
+.garage-pay-card h4 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #D4AF37;
+    margin-bottom: 6px;
+}
+
+.garage-pay-card p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 16px;
+}
+
+.garage-pay-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(212, 175, 55, 0.1);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #D4AF37;
+    font-weight: 600;
+}
+
+/* ===== بانر الشركة ===== */
+.company-banner {
+    position: relative;
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 20px;
+    height: 280px;
+    display: flex;
+    align-items: center;
+}
+
+.company-banner-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+.company-banner-img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    object-position: center 40%;
+}
+
+.company-banner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    z-index: 1;
+}
+
+.company-banner-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 2px 20px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.6));
+}
+
+.company-banner-logo {
+    width: 70px;
+    height: 70px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255,255,255,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.company-banner-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 14px;
+}
+
+.company-banner-logo .banner-logo-letter {
+    font-size: 32px;
+    font-weight: 900;
+    color: #ffffff;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.company-banner-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.company-banner-name {
+    font-size: 24px;
+    font-weight: 800;
+    color: #ffffff;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    margin: 0;
+}
+
+.company-banner-desc {
+    font-size: 14px;
+    color: rgba(255,255,255,0.85);
+    font-weight: 500;
+    margin: 0;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+/* ===== بطاقة تفاصيل الرحلة ===== */
+.trip-details-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 2px solid var(--border);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.trip-details-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: transparent;
+    border-radius: var(--radius-sm);
+}
+
+.detail-item .detail-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--primary-light);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.detail-item .detail-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.detail-item .detail-label {
+    font-size: 14px;
+    color: var(--text-light);
+    font-weight: 600;
+}
+
+.detail-item .detail-value {
+    font-size: 18px;
+    color: var(--text);
+    font-weight: 700;
+}
+
+/* ===== خريطة المقاعد ===== */
+.seat-map-container {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 20px;
+    border: 2px solid var(--border);
+    max-width: 600px;
+    margin: 0 auto 20px;
+}
+
+.seat-map-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.seat-map-header h4 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.seat-legend {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.legend-seat {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+}
+
+.legend-seat.available {
+    background: #1b5e20;
+    border: 2px solid #0d3b0f;
+}
+
+.legend-seat.selected-legend {
+    background: #7f0000;
+    border: 2px solid #4a0000;
+}
+
+.legend-seat.occupied {
+    background: #4e342e;
+    border: 2px solid #3e2723;
+}
+
+/* ===== تخطيط الباص ===== */
+.bus-layout {
+    background: #f8f9fa;
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    border: 2px dashed var(--border);
+}
+
+.bus-front {
+    text-align: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px dashed var(--border);
+}
+
+.seats-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.seat {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+    min-height: 42px;
+}
+
+.seat.available {
+    background: #1b5e20;
+    border: 2px solid #0d3b0f;
+    color: #a5d6a7;
+}
+
+.seat.available:hover {
+    background: #2e7d32;
+    transform: scale(1.08);
+    box-shadow: 0 2px 8px rgba(27, 94, 32, 0.5);
+}
+
+.seat.selected {
+    background: #7f0000;
+    border: 2px solid #4a0000;
+    color: #ffffff;
+    transform: scale(1.05);
+    box-shadow: 0 2px 12px rgba(127, 0, 0, 0.5);
+}
+
+.seat.occupied {
+    background: #4e342e;
+    border: 2px solid #3e2723;
+    color: #8d6e63;
+    cursor: not-allowed;
+}
+
+.seat.aisle {
+    background: transparent;
+    border: none;
+    cursor: default;
+    min-height: 20px;
+}
+
+/* ===== معلومات اختيار المقعد ===== */
+.seat-selection-info {
+    text-align: center;
+    padding: 14px;
+    margin-top: 16px;
+    background: transparent;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.seat-selection-info.active {
+    background: #4a0000;
+    color: #ef9a9a;
+}
+
+.seat-selection-info .selected-seat-number {
+    font-size: 22px;
+    font-weight: 900;
+    color: #ff5252;
+}
+
+/* ===== قائمة الرحلات المفلترة داخل تفاصيل الرحلة ===== */
+.filtered-trips-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.filtered-trip-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: var(--transition);
+    border: 2px solid var(--border);
+}
+
+.filtered-trip-card:hover {
+    transform: translateX(-4px);
+    box-shadow: var(--shadow);
+    border-color: var(--primary);
+}
+
+.filtered-trip-card.selected {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.trip-price {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.trip-selected-badge {
+    margin-top: 8px;
+    padding: 8px 14px;
+    background: #e8f5e9;
+    border-radius: var(--radius-sm);
+    color: #2e7d32;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.trip-select-hint {
+    margin-top: 8px;
+    padding: 8px 14px;
+    background: var(--primary-light);
+    border-radius: var(--radius-sm);
+    color: var(--primary);
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.filtered-trip-card:hover .trip-select-hint {
+    opacity: 1;
+}
+
+/* ===== معلومات التاريخ والوقت في بطاقة الرحلة ===== */
+.trip-meta {
+    display: flex;
+    gap: 20px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border);
+    flex-wrap: wrap;
+}
+
+.trip-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 18px;
+    color: var(--text);
+    font-weight: 700;
+    background: transparent;
+    padding: 6px 12px;
+    border-radius: 8px;
+}
+
+.trip-meta-item span:first-child {
+    font-size: 19px;
+}
+
+.trip-price {
+    color: var(--success) !important;
+    font-weight: 800 !important;
+    font-size: 19px !important;
+    background: var(--success-light) !important;
+}
+
+/* ===== نتائج البحث عن رحلات ===== */
+.route-search-results {
+    margin-bottom: 16px;
+}
+
+.search-results-header h4 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.route-results-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.route-result-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: var(--transition);
+    border: 2px solid var(--border);
+    position: relative;
+}
+
+.route-result-card:hover {
+    transform: translateX(-4px);
+    box-shadow: var(--shadow);
+    border-color: var(--company-color, var(--primary));
+}
+
+.route-result-company {
+    margin-bottom: 8px;
+}
+
+.company-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.route-result-route {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.route-city {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.route-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.route-city-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.route-arrow-line {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.route-dash {
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+}
+
+.route-result-meta {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border);
+}
+
+.route-result-hint {
+    margin-top: 8px;
+    padding: 5px 10px;
+    background: var(--primary-light);
+    border-radius: var(--radius-sm);
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.route-result-card:hover .route-result-hint {
+    opacity: 1;
+}
+
+.route-swap-col {
+    flex: 0 !important;
+    min-width: auto !important;
+    display: flex;
+    align-items: flex-end;
+    padding-bottom: 0;
+}
+
+.route-swap-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--primary);
+    background: var(--primary-light);
+    color: var(--primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.route-swap-btn:hover {
+    background: var(--primary);
+    color: #ffffff;
+}
+
+.route-swap-btn svg {
+    transition: transform 0.3s;
+}
+
+.route-swap-btn:hover svg {
+    transform: rotate(180deg);
+}
+
+/* ===== شريط فرز البحث ===== */
+.search-filter-bar {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    border: 2px solid var(--border);
+}
+
+.filter-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.filter-title svg {
+    color: var(--primary);
+}
+
+.filter-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 140px;
+}
+
+.filter-group label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+
+.filter-group input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: 'Cairo', sans-serif;
+    color: var(--text);
+    background: var(--white);
+    transition: var(--transition);
+    outline: none;
+    direction: ltr;
+    text-align: center;
+}
+
+.filter-group input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
+}
+
+.filter-reset-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    background: rgba(198, 40, 40, 0.7);
+    color: #ffffff;
+    border: 2px solid rgba(229, 57, 53, 0.6);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'Cairo', sans-serif;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+    backdrop-filter: blur(8px);
+}
+
+.filter-reset-btn:hover {
+    background: rgba(229, 57, 53, 0.85);
+    color: #ffffff;
+    border-color: rgba(229, 57, 53, 0.8);
+}
+
+.filter-result-count {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: var(--primary-light);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.no-trips-message {
+    text-align: center;
+    padding: 40px 20px;
+    background: var(--white);
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+}
+
+.no-trips-icon {
+    font-size: 50px;
+    margin-bottom: 10px;
+}
+
+.no-trips-message h4 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+
+.no-trips-message p {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* ===== قائمة الرحلات ===== */
+.trips-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 600px;
+    margin: 0 auto 20px;
+}
+
+.trip-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: var(--transition);
+    border: 2px solid var(--border);
+}
+
+.trip-card:hover {
+    transform: translateX(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary);
+}
+
+.trip-card.selected {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.trip-route {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.trip-from,
+.trip-to {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 70px;
+}
+
+.trip-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.trip-city {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.trip-arrow-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    position: relative;
+}
+
+.trip-dashed-line {
+    flex: 1;
+    height: 2px;
+    background: repeating-linear-gradient(
+        to left,
+        var(--primary) 0px,
+        var(--primary) 6px,
+        transparent 6px,
+        transparent 10px
+    );
+    opacity: 0.4;
+}
+
+.trip-direction-arrow {
+    width: 40px;
+    height: 40px;
+    background: var(--primary-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    flex-shrink: 0;
+    z-index: 1;
+}
+
+.trip-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+}
+
+.no-trips {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+}
+
+.no-trips .no-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.no-trips p {
+    font-size: 15px;
+}
+
+/* ===== شبكة الشركات ===== */
+.companies-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    max-width: 800px;
+    margin: 0 auto 20px;
+}
+
+.company-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 28px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    border: 2px solid var(--border);
+    position: relative;
+    overflow: hidden;
+}
+
+.company-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 4px;
+    background: var(--company-color, var(--primary));
+    transform: scaleX(0);
+    transition: var(--transition);
+}
+
+.company-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--company-color, var(--primary));
+}
+
+.company-card:hover::before {
+    transform: scaleX(1);
+}
+
+.company-card.selected {
+    border-color: var(--company-color, var(--primary));
+    background: color-mix(in srgb, var(--company-color, var(--primary)) 8%, white);
+}
+
+.company-card.selected::before {
+    transform: scaleX(1);
+}
+
+/* ===== شعار الشركة ===== */
+.company-logo-wrapper {
+    width: 120px;
+    height: 80px;
+    margin: 0 auto 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.85);
+    padding: 6px;
+}
+
+.company-logo-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+.company-bus-icon {
+    width: 90px;
+    height: 90px;
+    margin: 0 auto 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.company-bus-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.company-card h4 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+
+.company-card .company-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.company-card .company-select-hint {
+    font-size: 12px;
+    color: var(--primary);
+    font-weight: 600;
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.company-card:hover .company-select-hint {
+    opacity: 1;
+}
+
+.no-companies {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+    grid-column: 1 / -1;
+}
+
+.no-companies .no-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.no-companies p {
+    font-size: 15px;
+}
+
+/* ===== الأزرار ===== */
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--white);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 24px;
+    font-family: 'Cairo', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-secondary:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-light);
+}
+
+/* ===== صفحة قريباً ===== */
+.coming-soon {
+    text-align: center;
+    padding: 60px 20px;
+    background: var(--white);
+    border-radius: var(--radius);
+    max-width: 400px;
+    margin: 40px auto;
+}
+
+.coming-soon-icon {
+    font-size: 60px;
+    margin-bottom: 16px;
+}
+
+.coming-soon-icon.large {
+    font-size: 80px;
+}
+
+.coming-soon h4 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+}
+
+.coming-soon p {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.coming-soon-page {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.coming-soon-page h3 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+}
+
+.coming-soon-page p {
+    font-size: 15px;
+    color: var(--text-secondary);
+}
+
+/* ===== التجاوب مع الشاشات ===== */
+@media (max-width: 768px) {
+    .account-cards {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .account-card {
+        width: 100%;
+        max-width: 300px;
+        padding: 24px 20px;
+    }
+
+    .app-title {
+        font-size: 32px;
+    }
+
+    .cities-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .city-card {
+        padding: 20px 12px;
+    }
+
+    .city-icon {
+        font-size: 32px;
+    }
+
+    .step-header h3 {
+        font-size: 20px;
+    }
+
+    .booking-card {
+        width: 100%;
+        min-width: unset;
+    }
+
+    .owner-bookings-list {
+        gap: 12px;
+    }
+}
+
+@media (max-width: 400px) {
+    .cities-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .city-card h4 {
+        font-size: 14px;
+    }
+
+    .account-card {
+        padding: 20px 16px;
+    }
+
+    .account-card h3 {
+        font-size: 18px;
+    }
+}
+
+/* ===== تأثيرات إضافية ===== */
+.city-card, .garage-card {
+    animation: slideUp 0.4s ease both;
+}
+
+.cities-grid .city-card:nth-child(1) { animation-delay: 0.05s; }
+.cities-grid .city-card:nth-child(2) { animation-delay: 0.1s; }
+.cities-grid .city-card:nth-child(3) { animation-delay: 0.15s; }
+.cities-grid .city-card:nth-child(4) { animation-delay: 0.2s; }
+.cities-grid .city-card:nth-child(5) { animation-delay: 0.25s; }
+
+.garages-list .garage-card:nth-child(1) { animation-delay: 0.05s; }
+.garages-list .garage-card:nth-child(2) { animation-delay: 0.1s; }
+
+/* ===== لوحة صاحب الشركة ===== */
+.owner-container {
+    min-height: 100vh;
+    background: transparent;
+}
+
+.owner-header h2 {
+    color: var(--primary);
+}
+
+/* معلومات الشركة */
+.owner-company-info {
+    background: linear-gradient(135deg, #1565c0, #1a73e8);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin: 16px;
+    box-shadow: var(--shadow-lg);
+}
+
+.owner-logo-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.owner-company-logo {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #ffffff;
+    background: rgba(255, 255, 255, 0.85);
+    padding: 4px;
+}
+
+.owner-company-details h3 {
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 4px;
+}
+
+.owner-company-details p {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 13px;
+}
+
+/* الإحصائيات */
+.owner-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 0 16px;
+    margin-bottom: 16px;
+}
+
+.owner-stat-card {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    padding: 16px 12px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    transition: var(--transition);
+    border: 1px solid rgba(255,255,255,0.15);
+    backdrop-filter: blur(8px);
+}
+
+.owner-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-icon {
+    font-size: 24px;
+    margin-bottom: 6px;
+}
+
+.stat-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.7);
+    font-weight: 600;
+}
+
+/* فلترة الحجوزات */
+.owner-filter-bar {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin: 0 16px 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.15);
+    backdrop-filter: blur(8px);
+}
+
+.owner-filter-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text);
+}
+
+.owner-filter-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.owner-filter-group {
+    flex: 1;
+    min-width: 120px;
+}
+
+.owner-filter-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.owner-filter-group input,
+.owner-filter-group select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-family: 'Cairo', sans-serif;
+    background: transparent;
+    transition: var(--transition);
+}
+
+.owner-filter-group input:focus,
+.owner-filter-group select:focus {
+    border-color: var(--primary);
+    outline: none;
+}
+
+/* قائمة الحجوزات */
+.owner-bookings-section {
+    padding: 0 16px 16px;
+}
+
+.owner-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.owner-section-header h4 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.bookings-count {
+    background: rgba(13, 71, 161, 0.6);
+    color: #ffffff;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.owner-bookings-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+/* بطاقة الحجز */
+.booking-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    display: flex;
+    position: relative;
+    width: calc(50% - 8px);
+    min-width: 340px;
+    flex-grow: 1;
+}
+
+.booking-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+/* شريط الحالة الجانبي */
+.booking-card-status-bar {
+    width: 5px;
+    min-height: 100%;
+    flex-shrink: 0;
+}
+
+.booking-card-content {
+    flex: 1;
+    padding: 14px 16px;
+}
+
+.booking-confirmed .booking-card-status-bar {
+    background: #2e7d32;
+}
+
+.booking-pending .booking-card-status-bar {
+    background: #e65100;
+}
+
+.booking-cancelled .booking-card-status-bar {
+    background: #c62828;
+}
+
+/* الصف الأول: رقم الحجز + الحالة */
+.booking-row-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.booking-id-badge {
+    background: transparent;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--text-secondary);
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+}
+
+.booking-trip-badge {
+    background: #e3f2fd;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #1565c0;
+}
+
+.booking-status-pill {
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-right: auto;
+}
+
+.status-confirmed {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.status-pending {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.status-cancelled {
+    background: #ffebee;
+    color: #c62828;
+}
+
+/* الصف الثاني: اسم الزبون */
+.booking-row-customer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.booking-customer-icon-lg {
+    font-size: 20px;
+}
+
+.booking-customer-name {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.booking-customer-nickname {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+/* الصف الثالث: المسار */
+.booking-row-route {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding: 8px 14px;
+    background: transparent;
+    border-radius: var(--radius-sm);
+}
+
+.booking-route-city {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.booking-route-arrow {
+    display: flex;
+    align-items: center;
+}
+
+/* الصف الرابع: التفاصيل السريعة */
+.booking-row-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.booking-detail-chip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: transparent;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.booking-detail-chip span {
+    font-size: 13px;
+}
+
+.price-chip {
+    background: #e8f5e9;
+    color: #2e7d32;
+    font-weight: 700;
+}
+
+/* الصف الخامس: معلومات إضافية */
+.booking-row-extra {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 10px;
+    padding: 8px 0;
+    border-top: 1px dashed var(--border);
+}
+
+.booking-extra-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.national-id-inline {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    direction: ltr;
+    background: transparent;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+/* لا توجد حجوزات */
+.no-bookings-msg {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.no-bookings-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.no-bookings-msg h4 {
+    font-size: 16px;
+    color: var(--text);
+    margin-bottom: 6px;
+}
+
+.no-bookings-msg p {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* اختيار الشركة كصاحب */
+.owner-select-section {
+    padding: 20px 16px;
+}
+
+.owner-select-title {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.owner-select-title span {
+    font-size: 40px;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.owner-select-title h3 {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 6px;
+}
+
+.owner-select-title p {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.owner-company-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.owner-company-select-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 16px;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: var(--shadow);
+    border: 2px solid transparent;
+}
+
+.owner-company-select-card:hover {
+    border-color: var(--primary);
+    transform: translateX(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.owner-select-logo {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--border);
+    background: rgba(255, 255, 255, 0.85);
+    padding: 3px;
+}
+
+.owner-select-logo-placeholder {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.hamrash-color {
+    background: linear-gradient(135deg, #c62828, #e53935);
+}
+
+.owner-select-info {
+    flex: 1;
+}
+
+.owner-select-info h4 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 3px;
+}
+
+.owner-select-info p {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.owner-select-arrow {
+    font-size: 20px;
+    color: var(--text-light);
+    font-weight: 700;
+    transition: var(--transition);
+}
+
+.owner-company-select-card:hover .owner-select-arrow {
+    color: var(--primary);
+    transform: translateX(-4px);
+}
+
+/* زر العودة للشركات */
+.owner-back-to-companies {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 13px;
+    font-weight: 700;
+    font-family: 'Cairo', sans-serif;
+    cursor: pointer;
+    padding: 8px 16px;
+    margin-bottom: 8px;
+    transition: var(--transition);
+}
+
+.owner-back-to-companies:hover {
+    background: var(--primary-light);
+    border-radius: var(--radius-sm);
+}
+
+/* شعار الشركة في البانر */
+.owner-logo-placeholder {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    font-weight: 800;
+    color: #ffffff;
+    border: 3px solid #ffffff;
+}
+
+.hamrash-logo {
+    background: linear-gradient(135deg, #c62828, #e53935);
+}
+
+
+/* ===== أزرار الإجراءات السريعة ===== */
+.owner-quick-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.quick-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--white);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 700;
+    font-family: 'Cairo', sans-serif;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.quick-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+.add-trip-btn {
+    border-color: #1565c0;
+    color: #1565c0;
+    background: #e3f2fd;
+}
+
+.add-trip-btn:hover {
+    background: #1565c0;
+    color: #ffffff;
+}
+
+.export-btn {
+    border-color: #2e7d32;
+    color: #2e7d32;
+    background: #e8f5e9;
+}
+
+.export-btn:hover {
+    background: #2e7d32;
+    color: #ffffff;
+}
+
+.delete-all-btn {
+    border-color: #c62828;
+    color: #c62828;
+    background: #ffebee;
+}
+
+.delete-all-btn:hover {
+    background: #c62828;
+    color: #ffffff;
+}
+
+/* ===== أزرار إجراءات الحجز ===== */
+.booking-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border);
+    flex-wrap: wrap;
+}
+
+.booking-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 14px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'Cairo', sans-serif;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.booking-action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.confirm-action {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+}
+
+.confirm-action:hover {
+    background: #2e7d32;
+    color: #ffffff;
+}
+
+.cancel-action {
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
+}
+
+.cancel-action:hover {
+    background: #c62828;
+    color: #ffffff;
+}
+
+.pending-action {
+    background: rgba(230, 81, 0, 0.7);
+    color: #ffffff;
+    border: 1px solid rgba(230, 81, 0, 0.5);
+}
+
+.pending-action:hover {
+    background: rgba(230, 81, 0, 0.9);
+    color: #ffffff;
+}
+
+.delete-action {
+    background: rgba(183, 28, 28, 0.7);
+    color: #ffffff;
+    border: 1px solid rgba(183, 28, 28, 0.5);
+}
+
+.delete-action:hover {
+    background: rgba(183, 28, 28, 0.9);
+    color: #ffffff;
+}
+
+/* ===== نافذة التأكيد (Modal) ===== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s ease;
+    padding: 20px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-box {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 28px;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    animation: slideUp 0.3s ease;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.modal-large {
+    max-width: 560px;
+    text-align: right;
+}
+
+.modal-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.modal-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 8px;
+}
+
+.modal-message {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.modal-btn {
+    padding: 10px 24px;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Cairo', sans-serif;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.modal-confirm-btn {
+    background: var(--primary);
+    color: #ffffff;
+}
+
+.modal-confirm-btn:hover {
+    background: #0d47a1;
+    transform: translateY(-1px);
+}
+
+.modal-cancel-btn {
+    background: #f5f5f5;
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+
+.modal-cancel-btn:hover {
+    background: #e0e0e0;
+}
+
+/* ===== نافذة إضافة رحلة ===== */
+.modal-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--primary-light);
+}
+
+.modal-header-bar .modal-title {
+    margin-bottom: 0;
+}
+
+.modal-close-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: #f5f5f5;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.modal-close-btn:hover {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.modal-body {
+    margin-bottom: 20px;
+}
+
+.add-trip-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.form-row {
+    display: flex;
+    gap: 12px;
+}
+
+.form-row .form-group-modal {
+    flex: 1;
+}
+
+.form-group-modal {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.form-group-modal.full-width {
+    width: 100%;
+}
+
+.form-group-modal label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+}
+
+.form-group-modal input,
+.form-group-modal select {
+    padding: 10px 14px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: 'Cairo', sans-serif;
+    color: var(--text);
+    background: var(--white);
+    transition: var(--transition);
+}
+
+.form-group-modal input:focus,
+.form-group-modal select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.add-trip-error {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px;
+    background: #fff3e0;
+    border: 1px solid #ffcc80;
+    border-radius: var(--radius-sm);
+    color: #e65100;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-start;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+/* ===== إشعار النجاح (Toast) ===== */
+.toast-notification {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    z-index: 10001;
+    border-right: 4px solid #2e7d32;
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.toast-notification.toast-show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+.toast-icon {
+    font-size: 22px;
+}
+
+.toast-message {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+/* ===== تحسين الموبايل للعناصر الجديدة ===== */
+@media (max-width: 600px) {
+    .owner-quick-actions {
+        flex-direction: column;
+    }
+
+    .quick-action-btn {
+        justify-content: center;
+    }
+
+    .booking-actions {
+        flex-direction: column;
+    }
+
+    .booking-action-btn {
+        justify-content: center;
+        padding: 8px 12px;
+    }
+
+    .modal-box {
+        padding: 20px;
+        margin: 10px;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .modal-actions {
+        flex-direction: column;
+    }
+
+    .modal-btn {
+        justify-content: center;
+    }
+
+    .modal-footer {
+        flex-direction: column;
+    }
+
+    .toast-notification {
+        left: 20px;
+        right: 20px;
+        transform: translateX(0) translateY(100px);
+    }
+
+    .toast-notification.toast-show {
+        transform: translateX(0) translateY(0);
+    }
+}
+
+/* ===== نافذة تفاصيل الزبون ===== */
+.customer-details-modal-box {
+    max-width: 720px;
+    width: 95%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(20px);
+    border: 2px solid #D4AF37;
+}
+
+.customer-details-header-bar {
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(20px);
+    color: #D4AF37;
+    border-radius: 16px 16px 0 0;
+    border-bottom: 2px solid #D4AF37;
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.customer-details-header-bar .modal-title {
+    color: #D4AF37;
+    font-size: 20px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.customer-details-header-bar .modal-close-btn {
+    background: rgba(212, 175, 55, 0.15);
+    border: 1px solid #D4AF37;
+    color: #D4AF37;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.customer-details-header-bar .modal-close-btn:hover {
+    background: rgba(212, 175, 55, 0.3);
+}
+
+.customer-details-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+    max-height: calc(90vh - 140px);
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(20px);
+    color: #fff;
+}
+
+.customer-details-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #D4AF37;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(20px);
+    border-radius: 0 0 16px 16px;
+    display: flex;
+    justify-content: center;
+}
+
+/* بطاقة حالة الحجز */
+.cd-status-banner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    animation: cdFadeIn 0.4s ease;
+}
+
+.cd-status-icon {
+    font-size: 32px;
+    line-height: 1;
+}
+
+.cd-status-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cd-status-label {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.cd-status-id {
+    font-size: 13px;
+    color: rgba(255,255,255,0.6);
+    font-family: 'Cairo', monospace;
+}
+
+/* أقسام التفاصيل */
+.cd-section {
+    margin-bottom: 24px;
+    animation: cdSlideUp 0.4s ease;
+}
+
+.cd-section:last-child {
+    margin-bottom: 0;
+}
+
+.cd-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #D4AF37;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid rgba(212, 175, 55, 0.3);
+}
+
+.cd-section-icon {
+    font-size: 20px;
+    line-height: 1;
+}
+
+/* شبكة المعلومات */
+.cd-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.cd-info-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.cd-info-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+    margin-top: 12px;
+}
+
+.cd-info-grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+/* بطاقة المعلومة */
+.cd-info-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: all 0.2s ease;
+}
+
+.cd-info-card:hover {
+    background: rgba(212, 175, 55, 0.1);
+    border-color: #D4AF37;
+    box-shadow: 0 2px 8px rgba(212, 175, 55, 0.15);
+}
+
+.cd-info-card-sm {
+    padding: 12px 14px;
+}
+
+.cd-info-icon {
+    font-size: 22px;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.cd-info-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.cd-info-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cd-info-value {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    word-break: break-word;
+}
+
+.cd-info-value-lg {
+    font-size: 17px;
+    font-weight: 700;
+    color: #D4AF37;
+}
+
+.cd-info-value-highlight {
+    background: transparent;
+    color: #D4AF37;
+    padding: 0;
+    border-radius: 0;
+    display: inline-block;
+    font-weight: 800;
+    font-size: 18px;
+}
+
+.cd-info-value-price {
+    color: #0d9e5f;
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.cd-info-mono {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 15px;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    color: #D4AF37;
+    background: rgba(212, 175, 55, 0.1);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+/* بطاقة المسار */
+.cd-trip-route-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: rgba(212, 175, 55, 0.08);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    border-radius: 16px;
+    padding: 20px 28px;
+    margin-bottom: 16px;
+}
+
+.cd-route-from,
+.cd-route-to {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 80px;
+}
+
+.cd-route-label {
+    font-size: 15px;
+    color: rgba(255,255,255,0.5);
+    font-weight: 600;
+}
+
+.cd-route-city {
+    font-size: 26px;
+    font-weight: 800;
+    color: #D4AF37;
+}
+
+.cd-route-line {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex: 1;
+    min-width: 60px;
+    max-width: 180px;
+}
+
+.cd-route-dash {
+    flex: 1;
+    height: 2px;
+    background: repeating-linear-gradient(to left, #D4AF37 0, #D4AF37 6px, transparent 6px, transparent 12px);
+}
+
+.cd-route-arrow-icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* زر تفاصيل الزبون */
+.booking-action-btn.details-action {
+    background: linear-gradient(135deg, #1a73e8, #1565c0);
+    color: #fff;
+    border: none;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.booking-action-btn.details-action:hover {
+    background: linear-gradient(135deg, #1565c0, #0d47a1);
+    box-shadow: 0 3px 10px rgba(26, 115, 232, 0.3);
+    transform: translateY(-1px);
+}
+
+/* حركات التفاصيل */
+@keyframes cdFadeIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cdSlideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* تأخير ظهور الأقسام */
+.cd-section:nth-child(1) { animation-delay: 0s; }
+.cd-section:nth-child(2) { animation-delay: 0.08s; }
+.cd-section:nth-child(3) { animation-delay: 0.16s; }
+.cd-section:nth-child(4) { animation-delay: 0.24s; }
+
+/* استجابة للشاشات الصغيرة */
+@media (max-width: 768px) {
+    .customer-details-modal-box {
+        width: 98%;
+        max-height: 95vh;
+    }
+
+    .customer-details-body {
+        padding: 16px;
+    }
+
+    .cd-info-grid-2,
+    .cd-info-grid-3,
+    .cd-info-grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .cd-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cd-trip-route-card {
+        padding: 16px;
+        gap: 10px;
+    }
+
+    .cd-route-city {
+        font-size: 18px;
+    }
+
+    .cd-status-banner {
+        padding: 12px 16px;
+    }
+
+    .cd-status-icon {
+        font-size: 26px;
+    }
+
+    .cd-status-label {
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .cd-info-grid-2,
+    .cd-info-grid-3,
+    .cd-info-grid-4 {
+        grid-template-columns: 1fr;
+    }
+
+    .cd-trip-route-card {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .cd-route-line {
+        transform: rotate(90deg);
+        max-width: 60px;
+        min-width: 40px;
+    }
+
+    .booking-action-btn.details-action {
+        width: 100%;
+        justify-content: center;
+    }
+}
+/* ===== شاشة تأكيد الحجز ===== */
+.booking-confirm-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    align-items: center;
+}
+
+.btn-confirm-booking {
+    flex: 1;
+    padding: 14px 24px;
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, #2e7d32, #43a047);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3);
+}
+
+.btn-confirm-booking:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(46, 125, 50, 0.4);
+    background: linear-gradient(135deg, #1b5e20, #2e7d32);
+}
+
+.btn-confirm-booking:active {
+    transform: translateY(0);
+}
+
+.confirmation-container {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.confirmation-icon-wrapper {
+    margin-bottom: 16px;
+}
+
+.confirmation-checkmark {
+    display: inline-block;
+    animation: confCheckPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+@keyframes confCheckPop {
+    0% { transform: scale(0); opacity: 0; }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.confirmation-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: #2e7d32;
+    margin-bottom: 6px;
+}
+
+.confirmation-subtitle {
+    font-size: 17px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+}
+
+.confirmation-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    text-align: right;
+    margin-bottom: 16px;
+}
+
+.conf-status-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+}
+
+.conf-status-icon {
+    font-size: 28px;
+}
+
+.conf-status-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.conf-status-label {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.conf-status-id {
+    font-size: 16px;
+    color: var(--text-secondary);
+}
+
+.conf-section {
+    padding: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.conf-section-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.conf-section-title::before {
+    content: '';
+    width: 3px;
+    height: 16px;
+    background: var(--primary);
+    border-radius: 2px;
+}
+
+.conf-route-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 12px;
+    background: #f5f9ff;
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+}
+
+.conf-route-city {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.conf-route-label {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.conf-route-name {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.conf-route-arrow {
+    display: flex;
+    align-items: center;
+}
+
+.conf-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.conf-detail-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 10px;
+    background: transparent;
+    border-radius: 8px;
+}
+
+.conf-detail-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.conf-detail-label {
+    font-size: 14px;
+    color: var(--text-secondary);
+    display: block;
+}
+
+.conf-detail-value {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+    display: block;
+}
+
+.conf-highlight {
+    background: #D4AF37;
+    padding: 1px 8px;
+    border-radius: 4px;
+    color: #1A1A1A;
+    font-weight: 700;
+}
+
+.conf-price {
+    color: #2e7d32;
+    font-size: 17px;
+}
+
+.confirmation-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: #fff8e1;
+    border-radius: var(--radius);
+    border: 1px solid #ffe082;
+    font-size: 16px;
+    color: #f57f17;
+    margin-bottom: 20px;
+    text-align: right;
+}
+
+.confirmation-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.confirmation-actions .btn-primary {
+    padding: 12px 24px;
+    font-size: 14px;
+}
+
+.confirmation-actions .btn-secondary {
+    padding: 12px 24px;
+    font-size: 14px;
+}
+
+@media (max-width: 480px) {
+    .conf-details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .confirmation-actions {
+        flex-direction: column;
+    }
+
+    .booking-confirm-actions {
+        flex-direction: column-reverse;
+    }
+
+    .btn-confirm-booking {
+        width: 100%;
+    }
+}
+
+/* ===== زر حجوزاتي في هيدر الزبون ===== */
+.my-bookings-header-btn {
+    position: relative;
+    background: none;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 8px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.my-bookings-header-btn:hover {
+    background: #f0f0f0;
+    color: var(--primary);
+}
+
+.my-bookings-header-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.bookings-badge {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    background: #e53935;
+    color: white;
+    font-size: 10px;
+    font-weight: 800;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cairo', sans-serif;
+    padding: 0 4px;
+    border: 2px solid var(--white);
+}
+
+/* ===== قسم حجوزاتي داخل شاشة الزبون ===== */
+.my-bookings-panel {
+    animation: mbpSlideIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes mbpSlideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.mbp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0 12px;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 14px;
+}
+
+.mbp-header h3 {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mbp-close-btn {
+    background: transparent;
+    border: none;
+    border-radius: 10px;
+    padding: 8px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+}
+
+.mbp-close-btn:hover {
+    background: #fee;
+    color: #c62828;
+}
+
+/* شريط البحث */
+.mbp-search-bar {
+    margin-bottom: 12px;
+}
+
+.mbp-search-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--white);
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    padding: 10px 14px;
+    transition: all 0.3s;
+}
+
+.mbp-search-field:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+}
+
+.mbp-search-field input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 13px;
+    font-family: 'Cairo', sans-serif;
+    color: var(--text);
+    background: transparent;
+}
+
+.mbp-search-field input::placeholder {
+    color: #aaa;
+}
+
+/* تبويبات الفلترة */
+.mbp-filter-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.mbp-filter-tabs::-webkit-scrollbar {
+    height: 0;
+}
+
+.mbp-filter-tab {
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Cairo', sans-serif;
+    color: var(--text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.3s;
+}
+
+.mbp-filter-tab:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.mbp-filter-tab.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
+}
+
+/* عدد النتائج */
+.mbp-count {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+/* قائمة الحجوزات */
+.mbp-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* ===== بطاقة الحجز الاحترافية ===== */
+.mbp-card {
+    background: var(--white);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: mbpCardIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+    position: relative;
+}
+
+@keyframes mbpCardIn {
+    from { opacity: 0; transform: translateY(15px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.mbp-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+.mbp-card:active {
+    transform: translateY(-1px);
+}
+
+/* شريط الحالة العلوي */
+.mbp-card-status-bar {
+    height: 4px;
+    width: 100%;
+}
+
+.mbp-card-body {
+    padding: 14px 16px 12px;
+}
+
+/* الصف الأول */
+.mbp-card-row-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.mbp-card-ids {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mbp-booking-id {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: 0.5px;
+}
+
+.mbp-trip-number {
+    font-size: 10px;
+    color: var(--text-secondary);
+    background: transparent;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+/* شارة الحالة */
+.mbp-status-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 12px;
+    letter-spacing: 0.3px;
+}
+
+.mbp-status-confirmed {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.mbp-status-pending {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.mbp-status-cancelled {
+    background: #ffebee;
+    color: #c62828;
+}
+
+/* المسار */
+.mbp-card-route {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 4px;
+    padding: 0 4px;
+}
+
+.mbp-route-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.mbp-route-dot-from {
+    background: #1a73e8;
+    box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2);
+}
+
+.mbp-route-dot-to {
+    background: #e53935;
+    box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.2);
+}
+
+.mbp-route-line-wrapper {
+    flex: 1;
+    position: relative;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 6px;
+}
+
+.mbp-route-dashed {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: repeating-linear-gradient(to left, #ccc, #ccc 4px, transparent 4px, transparent 8px);
+    transform: translateY(-50%);
+}
+
+.mbp-route-plane {
+    position: relative;
+    z-index: 1;
+    background: var(--white);
+    padding: 0 2px;
+}
+
+.mbp-route-labels {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 0;
+    margin-bottom: 12px;
+}
+
+.mbp-route-city {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text);
+    width: auto;
+}
+
+.mbp-route-labels .mbp-route-city:first-child {
+    text-align: right;
+}
+
+.mbp-route-labels .mbp-route-city:last-child {
+    text-align: left;
+}
+
+/* التفاصيل - chips */
+.mbp-card-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.mbp-detail-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: transparent;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    transition: background 0.2s;
+}
+
+.mbp-detail-chip svg {
+    flex-shrink: 0;
+}
+
+.mbp-detail-seat span {
+    color: #1565c0;
+    font-weight: 700;
+}
+
+.mbp-detail-price span {
+    color: #2e7d32;
+    font-weight: 700;
+}
+
+/* الشريط السفلي */
+.mbp-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+}
+
+.mbp-footer-company {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.mbp-footer-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.mbp-footer-arrow {
+    color: #bbb;
+    transition: transform 0.2s;
+}
+
+.mbp-card:hover .mbp-footer-arrow {
+    transform: translateX(-3px);
+    color: var(--primary);
+}
+
+/* حالة لا توجد حجوزات */
+.mbp-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 50px 20px;
+    text-align: center;
+}
+
+.mbp-empty-icon {
+    font-size: 56px;
+    margin-bottom: 12px;
+    opacity: 0.4;
+}
+
+.mbp-empty h4 {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 6px;
+}
+
+.mbp-empty p {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* ===== استجابة الشاشات الصغيرة ===== */
+@media (max-width: 480px) {
+    .mbp-card-details {
+        grid-template-columns: 1fr;
+    }
+
+    .mbp-card-body {
+        padding: 12px 14px 10px;
+    }
+
+    .mbp-route-city {
+        font-size: 13px;
+    }
+
+    .mbp-booking-id {
+        font-size: 14px;
+    }
+}
+
+/* ===== تبويبات الزبون ===== */
+.customer-tabs {
+    display: flex;
+    gap: 0;
+    padding: 0;
+    background: var(--white);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    position: sticky;
+    top: 60px;
+    z-index: 90;
+}
+
+.customer-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 20px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Cairo', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    transition: var(--transition);
+    position: relative;
+    border-bottom: 3px solid transparent;
+}
+
+.customer-tab:hover {
+    color: var(--primary);
+    background: var(--primary-light);
+}
+
+.customer-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.customer-tab svg {
+    flex-shrink: 0;
+}
+
+/* ===== محتوى التبويبات ===== */
+.customer-tabs-content {
+    padding: 20px;
+}
+
+.tab-panel {
+    display: none;
+    animation: fadeIn 0.4s ease;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+.tab-panel-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.tab-panel-header h3 {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 6px;
+}
+
+.tab-panel-header p {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+/* ===== شبكة جميع الشركات ===== */
+.all-companies-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.all-company-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+    border: 2px solid transparent;
+}
+
+.all-company-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 4px;
+    background: var(--company-color, var(--primary));
+}
+
+.all-company-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--company-color, var(--primary));
+}
+
+.all-company-card .company-bus-icon {
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: center;
+}
+
+.all-company-card .company-bus-icon svg {
+    width: 100px;
+    height: auto;
+}
+
+.all-company-card .company-logo-wrapper {
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: center;
+}
+
+.all-company-card .company-logo-img {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 2px solid var(--border);
+}
+
+.all-company-card h4 {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 6px;
+    text-align: center;
+}
+
+.all-company-card .company-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: 12px;
+}
+
+.all-company-card .company-trips-count {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--primary-light);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.all-company-card .company-select-hint {
+    display: block;
+    text-align: center;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--text-light);
+    font-weight: 600;
+}
+
+/* ===== قائمة جميع الرحلات ===== */
+.all-trips-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.all-trip-card {
+    background: #1A1A1A !important;
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    box-shadow: var(--shadow);
+    outline: 3px solid #D4AF37 !important;
+    outline-offset: -3px;
+    cursor: pointer;
+    transition: var(--transition);
+    border-right: 4px solid var(--company-color, var(--primary));
+    position: relative;
+}
+
+.all-trip-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.all-trip-card .trip-company-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 10px;
+}
+
+.all-trip-card .trip-route {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.all-trip-card .trip-from,
+.all-trip-card .trip-to {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.all-trip-card .trip-label {
+    font-size: 14px;
+    color: var(--text-light);
+    font-weight: 600;
+}
+
+.all-trip-card .trip-city {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.all-trip-card .trip-arrow-container {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    gap: 4px;
+}
+
+.all-trip-card .trip-dashed-line {
+    flex: 1;
+    height: 2px;
+    background: repeating-linear-gradient(to left, var(--border), var(--border) 4px, transparent 4px, transparent 8px);
+}
+
+.all-trip-card .trip-direction-arrow {
+    color: var(--primary);
+    flex-shrink: 0;
+}
+
+.all-trip-card .trip-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.all-trip-card .trip-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 18px;
+    color: var(--text);
+    font-weight: 700;
+    background: transparent;
+    padding: 6px 12px;
+    border-radius: 8px;
+}
+
+.all-trip-card .trip-price {
+    color: var(--success) !important;
+    font-weight: 800 !important;
+    font-size: 19px !important;
+    background: transparent !important;
+}
+
+.all-trip-card .trip-bus-number,
+.trip-bus-number {
+    color: #d32f2f !important;
+    font-weight: 800 !important;
+    font-size: 18px !important;
+    background: transparent !important;
+    letter-spacing: 1px;
+}
+
+.all-trip-card .trip-select-hint {
+    text-align: center;
+    margin-top: 8px;
+    font-size: 15px;
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* ===== خطوات الحجز ===== */
+.booking-steps {
+    animation: fadeIn 0.4s ease;
+}
+
+.booking-steps .steps-indicator {
+    padding: 20px 16px;
+}
+
+.booking-steps .step-circle {
+    width: 40px;
+    height: 40px;
+    font-size: 15px;
+}
+
+.booking-steps .step span {
+    font-size: 13px;
+}
+
+.booking-steps .step-line {
+    width: 60px;
+}
+
+/* ===== قسم زر المتابعة بعد اختيار المقعد ===== */
+.seat-continue-section {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.seat-continue-section .btn-primary {
+    padding: 16px 40px;
+    font-size: 18px;
+    font-weight: 800;
+    border-radius: var(--radius);
+    animation: pulseBtn 1.5s infinite;
+}
+
+@keyframes pulseBtn {
+    0% { box-shadow: 0 0 0 0 rgba(26, 115, 232, 0.4); }
+    70% { box-shadow: 0 0 0 12px rgba(26, 115, 232, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(26, 115, 232, 0); }
+}
+
+/* ===== زر الرجوع للتبويبات ===== */
+.back-to-tabs-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: var(--primary-light);
+    color: var(--primary);
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: 'Cairo', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    transition: var(--transition);
+    margin-bottom: 16px;
+}
+
+.back-to-tabs-btn:hover {
+    background: var(--primary);
+    color: var(--white);
+}
+
+/* ===== استجابة الشاشات الصغيرة للتبويبات ===== */
+@media (max-width: 600px) {
+    .all-companies-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .customer-tab {
+        padding: 12px 16px;
+        font-size: 14px;
+    }
+
+    .customer-tab svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .all-trip-card .trip-route {
+        gap: 8px;
+    }
+
+    .all-trip-card .trip-city {
+        font-size: 14px;
+    }
+
+    .all-trip-card .trip-meta {
+        gap: 10px;
+    }
+}
+
+/* ===== تحسينات شاملة لشاشات الموبايل أندرويد ===== */
+
+/* منع التكبير غير المرغوب وتحسين اللمس */
+html {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    touch-action: manipulation;
+}
+
+body {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    overscroll-behavior: none;
+}
+
+/* تحسين حقول الإدخال على الموبايل - منع التكبير التلقائي */
+input, select, textarea {
+    font-size: 16px !important;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 12px center;
+    padding-left: 32px !important;
+}
+
+@media (max-width: 480px) {
+    /* ===== الشاشة الرئيسية ===== */
+    .main-container {
+        padding: 20px 12px;
+        justify-content: flex-start;
+        padding-top: 40px;
+    }
+
+    .main-container::before,
+    .main-container::after {
+        display: none;
+    }
+
+    .logo-section {
+        margin-bottom: 30px;
+    }
+
+    .logo-icon {
+        width: 90px;
+        height: 90px;
+        border-radius: 22px;
+        margin-bottom: 14px;
+    }
+
+    .logo-icon svg {
+        width: 60px;
+        height: 60px;
+    }
+
+    .app-title {
+        font-size: 28px !important;
+        letter-spacing: 0;
+    }
+
+    .app-subtitle {
+        font-size: 13px !important;
+    }
+
+    /* بطاقات الحسابات */
+    .account-cards {
+        gap: 12px;
+        width: 100%;
+    }
+
+    .account-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 18px 16px !important;
+        border-radius: 14px !important;
+    }
+
+    .card-icon {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 10px;
+    }
+
+    .card-icon svg {
+        width: 48px;
+        height: 48px;
+    }
+
+    .account-card h3 {
+        font-size: 17px !important;
+    }
+
+    .account-card p {
+        font-size: 12px !important;
+    }
+
+    /* ===== الهيدر ===== */
+    .customer-header {
+        padding: 12px 14px;
+    }
+
+    .customer-header h2 {
+        font-size: 17px !important;
+    }
+
+    .back-btn {
+        padding: 6px;
+    }
+
+    .back-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    /* ===== التبويبات ===== */
+    .customer-tabs {
+        top: 52px;
+    }
+
+    .customer-tab {
+        padding: 10px 12px !important;
+        font-size: 13px !important;
+        gap: 5px;
+    }
+
+    .customer-tab svg {
+        width: 16px !important;
+        height: 16px !important;
+    }
+
+    /* ===== محتوى التبويبات ===== */
+    .customer-tabs-content {
+        padding: 14px 10px;
+    }
+
+    .tab-panel-header {
+        margin-bottom: 16px;
+    }
+
+    .tab-panel-header h3 {
+        font-size: 18px !important;
+    }
+
+    .tab-panel-header p {
+        font-size: 12px !important;
+    }
+
+    /* ===== شبكة الشركات ===== */
+    .all-companies-grid {
+        grid-template-columns: 1fr !important;
+        gap: 10px;
+    }
+
+    .all-company-card {
+        padding: 14px !important;
+        border-radius: 12px !important;
+    }
+
+    .all-company-card .company-logo-img {
+        width: 60px;
+        height: 60px;
+        border-radius: 10px;
+    }
+
+    .all-company-card .company-bus-icon svg {
+        width: 70px;
+    }
+
+    .all-company-card h4 {
+        font-size: 15px !important;
+    }
+
+    .all-company-card .company-desc {
+        font-size: 12px !important;
+    }
+
+    .all-company-card .company-trips-count {
+        padding: 6px 12px;
+        font-size: 12px !important;
+    }
+
+    /* ===== بطاقات الرحلات ===== */
+    .all-trips-list {
+        gap: 10px;
+    }
+
+    .all-trip-card {
+        padding: 12px 14px !important;
+        border-radius: 12px !important;
+        border-right-width: 3px;
+    }
+
+    .all-trip-card .trip-company-badge {
+        padding: 4px 10px;
+        font-size: 12px !important;
+        margin-bottom: 8px;
+    }
+
+    .all-trip-card .trip-route {
+        gap: 6px !important;
+        margin-bottom: 8px;
+    }
+
+    .all-trip-card .trip-city {
+        font-size: 15px !important;
+    }
+
+    .all-trip-card .trip-label {
+        font-size: 11px !important;
+    }
+
+    .all-trip-card .trip-meta {
+        gap: 6px !important;
+    }
+
+    .all-trip-card .trip-meta-item {
+        font-size: 13px !important;
+        padding: 4px 8px;
+        border-radius: 6px;
+    }
+
+    .all-trip-card .trip-price {
+        font-size: 14px !important;
+    }
+
+    .all-trip-card .trip-select-hint {
+        font-size: 12px !important;
+    }
+
+    /* ===== مؤشر الخطوات ===== */
+    .steps-indicator {
+        padding: 14px 10px !important;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .step-circle {
+        width: 30px !important;
+        height: 30px !important;
+        font-size: 12px !important;
+    }
+
+    .step span {
+        font-size: 10px !important;
+    }
+
+    .step-line {
+        width: 30px !important;
+        margin: 0 4px !important;
+        margin-bottom: 16px !important;
+    }
+
+    .booking-steps .step-circle {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 13px !important;
+    }
+
+    .booking-steps .step span {
+        font-size: 11px !important;
+    }
+
+    .booking-steps .step-line {
+        width: 35px !important;
+    }
+
+    /* ===== محتوى الخطوات ===== */
+    .steps-content {
+        padding: 14px 10px !important;
+    }
+
+    .step-header {
+        margin-bottom: 16px;
+    }
+
+    .step-header h3 {
+        font-size: 18px !important;
+    }
+
+    .step-header p {
+        font-size: 12px !important;
+    }
+
+    /* ===== بانر الشركة ===== */
+    .company-banner {
+        border-radius: 12px !important;
+        margin-bottom: 14px;
+    }
+
+    .company-banner-img {
+        height: 100px !important;
+        object-fit: cover;
+    }
+
+    .company-banner-content {
+        padding: 10px 14px !important;
+    }
+
+    .company-banner-name {
+        font-size: 16px !important;
+    }
+
+    .company-banner-desc {
+        font-size: 12px !important;
+    }
+
+    /* ===== بطاقة تفاصيل الرحلة ===== */
+    .trip-details-card {
+        border-radius: 12px !important;
+        padding: 14px !important;
+    }
+
+    /* ===== شريط البحث والفلترة ===== */
+    .search-filter-bar,
+    .route-search-bar {
+        border-radius: 12px !important;
+        padding: 12px !important;
+    }
+
+    .filter-title {
+        font-size: 13px !important;
+        margin-bottom: 10px;
+    }
+
+    .filter-fields,
+    .route-search-fields {
+        gap: 8px !important;
+    }
+
+    .filter-group {
+        width: 100% !important;
+    }
+
+    .filter-group label {
+        font-size: 12px !important;
+    }
+
+    .filter-group input,
+    .filter-group select {
+        padding: 10px 12px !important;
+        font-size: 15px !important;
+        border-radius: 8px !important;
+    }
+
+    .filter-reset-btn {
+        padding: 8px 14px !important;
+        font-size: 12px !important;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .route-swap-col {
+        flex: 0 0 100% !important;
+        display: flex;
+        justify-content: center;
+    }
+
+    .route-swap-btn {
+        width: 40px;
+        height: 40px;
+    }
+
+    /* ===== قائمة الرحلات المفلترة ===== */
+    .filtered-trips-list {
+        gap: 8px;
+    }
+
+    /* ===== اختيار المقعد ===== */
+    .bus-layout {
+        padding: 10px !important;
+        border-radius: 12px !important;
+    }
+
+    .seat {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 11px !important;
+        border-radius: 6px !important;
+    }
+
+    .seat-gap {
+        width: 16px !important;
+    }
+
+    .seat-row {
+        gap: 4px !important;
+        margin-bottom: 4px !important;
+    }
+
+    .bus-legend {
+        gap: 8px !important;
+        flex-wrap: wrap;
+    }
+
+    .legend-item {
+        font-size: 11px !important;
+    }
+
+    /* ===== نموذج الزبون ===== */
+    .customer-form {
+        gap: 12px !important;
+    }
+
+    .form-group {
+        margin-bottom: 0 !important;
+    }
+
+    .form-group label {
+        font-size: 13px !important;
+        margin-bottom: 4px !important;
+    }
+
+    .form-group input {
+        padding: 12px 14px !important;
+        font-size: 15px !important;
+        border-radius: 10px !important;
+    }
+
+    /* ===== خيارات الدفع ===== */
+    .payment-options {
+        gap: 10px !important;
+    }
+
+    .payment-card {
+        padding: 14px !important;
+        border-radius: 12px !important;
+    }
+
+    .payment-icon {
+        width: 45px;
+        height: 45px;
+    }
+
+    .payment-icon svg {
+        width: 45px;
+        height: 45px;
+    }
+
+    .payment-info h4 {
+        font-size: 15px !important;
+    }
+
+    .payment-info p {
+        font-size: 11px !important;
+    }
+
+    /* ===== تفاصيل شام كاش ===== */
+    .shamcash-card {
+        border-radius: 12px !important;
+        padding: 14px !important;
+    }
+
+    .shamcash-header {
+        flex-direction: column;
+        gap: 6px;
+        text-align: center;
+    }
+
+    .account-number {
+        font-size: 16px !important;
+        padding: 10px !important;
+    }
+
+    .payment-instructions h5 {
+        font-size: 13px !important;
+    }
+
+    .payment-instructions li {
+        font-size: 12px !important;
+        padding: 4px 0;
+    }
+
+    /* ===== الأزرار ===== */
+    .btn-primary {
+        padding: 12px 20px !important;
+        font-size: 15px !important;
+        border-radius: 12px !important;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .btn-secondary {
+        padding: 10px 18px !important;
+        font-size: 14px !important;
+        border-radius: 12px !important;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .seat-continue-section .btn-primary {
+        padding: 14px 24px !important;
+        font-size: 16px !important;
+    }
+
+    /* ===== النوافذ المنبثقة ===== */
+    .modal-overlay {
+        padding: 10px;
+        align-items: flex-end;
+    }
+
+    .modal-box {
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: 90vh;
+        border-radius: 16px 16px 0 0 !important;
+        padding: 16px !important;
+    }
+
+    .modal-large {
+        max-height: 92vh;
+    }
+
+    .modal-header-bar {
+        padding: 10px 0 !important;
+        margin-bottom: 10px;
+    }
+
+    .modal-title {
+        font-size: 16px !important;
+    }
+
+    .modal-body {
+        padding: 10px 0 !important;
+    }
+
+    .modal-footer {
+        padding-top: 10px !important;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .modal-btn {
+        width: 100%;
+        padding: 12px !important;
+        font-size: 14px !important;
+    }
+
+    /* نموذج إضافة رحلة */
+    .add-trip-form .form-row {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+
+    .form-group-modal {
+        width: 100% !important;
+    }
+
+    .form-group-modal label {
+        font-size: 12px !important;
+    }
+
+    .form-group-modal input,
+    .form-group-modal select {
+        padding: 10px 12px !important;
+        font-size: 15px !important;
+    }
+
+    /* ===== لوحة صاحب الشركة ===== */
+    .owner-company-info {
+        margin: 10px !important;
+        padding: 14px !important;
+        border-radius: 12px !important;
+    }
+
+    .owner-logo-section {
+        gap: 10px;
+    }
+
+    .owner-company-logo {
+        width: 50px;
+        height: 50px;
+    }
+
+    .owner-company-details h3 {
+        font-size: 16px !important;
+    }
+
+    .owner-company-details p {
+        font-size: 11px !important;
+    }
+
+    /* الإحصائيات */
+    .owner-stats-grid {
+        gap: 8px;
+        padding: 0 10px;
+    }
+
+    .owner-stat-card {
+        padding: 10px 8px !important;
+        border-radius: 10px !important;
+    }
+
+    .stat-icon {
+        font-size: 20px !important;
+    }
+
+    .stat-value {
+        font-size: 18px !important;
+    }
+
+    .stat-label {
+        font-size: 10px !important;
+    }
+
+    /* فلترة الحجوزات */
+    .owner-filter-bar {
+        margin: 10px !important;
+        padding: 12px !important;
+        border-radius: 12px !important;
+    }
+
+    .owner-filter-fields {
+        gap: 8px !important;
+    }
+
+    .owner-filter-group {
+        width: 100% !important;
+    }
+
+    .owner-filter-group label {
+        font-size: 12px !important;
+    }
+
+    .owner-filter-group input,
+    .owner-filter-group select {
+        padding: 10px 12px !important;
+        font-size: 15px !important;
+    }
+
+    /* تبويبات لوحة الشركة */
+    .owner-dashboard-tabs {
+        margin: 0 10px 10px !important;
+    }
+
+    .owner-dash-tab {
+        padding: 8px 12px !important;
+        font-size: 13px !important;
+    }
+
+    /* أزرار الإجراءات السريعة */
+    .owner-quick-actions {
+        flex-direction: column !important;
+        gap: 8px !important;
+        padding: 0 10px;
+    }
+
+    .quick-action-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 10px 14px !important;
+        font-size: 13px !important;
+    }
+
+    /* قائمة الحجوزات */
+    .owner-bookings-list {
+        padding: 0 10px;
+        gap: 10px !important;
+    }
+
+    .booking-card {
+        padding: 12px !important;
+        border-radius: 12px !important;
+    }
+
+    /* ===== حجوزاتي ===== */
+    .my-bookings-panel {
+        padding: 10px;
+    }
+
+    .mbp-header h3 {
+        font-size: 15px !important;
+    }
+
+    .mbp-filter-tabs {
+        gap: 4px;
+    }
+
+    .mbp-filter-tab {
+        padding: 5px 10px !important;
+        font-size: 11px !important;
+    }
+
+    .mbp-card {
+        border-radius: 12px !important;
+    }
+
+    .mbp-card-header {
+        padding: 10px 12px !important;
+    }
+
+    .mbp-card-body {
+        padding: 10px 12px !important;
+    }
+
+    /* ===== تأكيد الحجز ===== */
+    .confirmation-container {
+        padding: 14px 0 !important;
+    }
+
+    .confirmation-title {
+        font-size: 22px !important;
+    }
+
+    .confirmation-subtitle {
+        font-size: 14px !important;
+    }
+
+    .confirmation-card {
+        border-radius: 12px !important;
+    }
+
+    .conf-route-card {
+        flex-direction: column;
+        gap: 8px !important;
+        padding: 10px !important;
+    }
+
+    .conf-details-grid {
+        grid-template-columns: 1fr !important;
+        gap: 6px;
+    }
+
+    .booking-confirm-actions {
+        flex-direction: column-reverse !important;
+        gap: 8px;
+    }
+
+    .btn-confirm-booking {
+        width: 100%;
+        padding: 12px 20px !important;
+        font-size: 15px !important;
+    }
+
+    /* ===== إشعار Toast ===== */
+    .toast-notification {
+        bottom: 20px !important;
+        left: 10px !important;
+        right: 10px !important;
+        padding: 12px 16px !important;
+        border-radius: 12px !important;
+    }
+
+    /* ===== تبويبات الرحلات ===== */
+    .owner-trip-card {
+        padding: 12px !important;
+        border-radius: 12px !important;
+    }
+
+    .owner-trip-actions {
+        flex-direction: column !important;
+        gap: 6px !important;
+    }
+
+    .owner-trip-actions button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* ===== نافذة تسجيل الدخول ===== */
+    #owner-login-modal .modal-box {
+        max-width: 100% !important;
+        border-radius: 16px 16px 0 0 !important;
+    }
+
+    #owner-login-modal input {
+        padding: 12px 14px !important;
+        font-size: 15px !important;
+    }
+
+    /* ===== بطاقات اختيار الشركة ===== */
+    .owner-company-cards {
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .owner-company-select-card {
+        padding: 14px !important;
+        border-radius: 12px !important;
+    }
+
+    /* ===== شبكة المدن ===== */
+    .cities-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+    }
+
+    .city-card {
+        padding: 14px 8px !important;
+        border-radius: 10px !important;
+    }
+
+    .city-icon {
+        font-size: 28px !important;
+        margin-bottom: 6px;
+    }
+
+    .city-card h4 {
+        font-size: 13px !important;
+    }
+
+    /* ===== قائمة الكراجات ===== */
+    .garages-list {
+        gap: 10px;
+    }
+
+    .garage-card {
+        padding: 12px !important;
+        border-radius: 12px !important;
+    }
+
+    /* ===== لا توجد نتائج ===== */
+    .no-trips-message {
+        padding: 20px !important;
+    }
+
+    .no-trips-icon {
+        font-size: 36px !important;
+    }
+
+    .no-trips-message h4 {
+        font-size: 16px !important;
+    }
+
+    .no-trips-message p {
+        font-size: 13px !important;
+    }
+
+    /* ===== شريط البحث في الرحلات ===== */
+    .route-search-results {
+        border-radius: 12px !important;
+    }
+
+    .search-results-header h4 {
+        font-size: 14px !important;
+    }
+
+    .filter-result-count {
+        font-size: 12px !important;
+    }
+
+    /* ===== صفحة قريباً ===== */
+    .coming-soon-page {
+        padding: 40px 20px !important;
+    }
+
+    .coming-soon-icon.large {
+        font-size: 48px !important;
+    }
+
+    .coming-soon-page h3 {
+        font-size: 20px !important;
+    }
+
+    .coming-soon-page p {
+        font-size: 14px !important;
+    }
+
+    /* ===== زر العودة للشركات ===== */
+    .owner-back-to-companies {
+        margin: 10px !important;
+        padding: 8px 14px !important;
+        font-size: 13px !important;
+    }
+
+    /* ===== زر الرجوع للتبويبات ===== */
+    .back-to-tabs-btn {
+        padding: 8px 14px !important;
+        font-size: 13px !important;
+    }
+
+    /* ===== الدفع في الكراج ===== */
+    .garage-pay-card {
+        padding: 14px !important;
+        border-radius: 12px !important;
+    }
+
+    .garage-pay-icon-large {
+        font-size: 36px !important;
+    }
+
+    .garage-pay-card h4 {
+        font-size: 16px !important;
+    }
+
+    .garage-pay-card p {
+        font-size: 12px !important;
+    }
+}
+
+/* ===== تحسينات إضافية لشاشات أندرويد الصغيرة جداً (360px وأقل) ===== */
+@media (max-width: 360px) {
+    .main-container {
+        padding: 16px 8px;
+        padding-top: 30px;
+    }
+
+    .logo-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 18px;
+    }
+
+    .logo-icon svg {
+        width: 48px;
+        height: 48px;
+    }
+
+    .app-title {
+        font-size: 24px !important;
+    }
+
+    .app-subtitle {
+        font-size: 11px !important;
+    }
+
+    .account-card {
+        padding: 14px 12px !important;
+    }
+
+    .account-card h3 {
+        font-size: 15px !important;
+    }
+
+    .customer-tabs-content {
+        padding: 10px 8px;
+    }
+
+    .steps-content {
+        padding: 10px 8px !important;
+    }
+
+    .seat {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 10px !important;
+    }
+
+    .seat-gap {
+        width: 12px !important;
+    }
+
+    .step-circle {
+        width: 26px !important;
+        height: 26px !important;
+        font-size: 11px !important;
+    }
+
+    .step span {
+        font-size: 9px !important;
+    }
+
+    .step-line {
+        width: 22px !important;
+    }
+
+    .btn-primary {
+        padding: 10px 16px !important;
+        font-size: 14px !important;
+    }
+
+    .all-trip-card .trip-city {
+        font-size: 13px !important;
+    }
+
+    .all-trip-card .trip-meta-item {
+        font-size: 11px !important;
+        padding: 3px 6px;
+    }
+
+    .cities-grid {
+        gap: 6px !important;
+    }
+
+    .city-card {
+        padding: 10px 6px !important;
+    }
+
+    .city-icon {
+        font-size: 24px !important;
+    }
+
+    .city-card h4 {
+        font-size: 11px !important;
+    }
+
+    .owner-stats-grid {
+        gap: 6px;
+    }
+
+    .stat-value {
+        font-size: 16px !important;
+    }
+
+    .stat-label {
+        font-size: 9px !important;
+    }
+}
+
+/* ===== تحسينات خاصة بأندرويد - إصلاح مشاكل شريط التنقل ===== */
+@supports (bottom: env(safe-area-inset-bottom)) {
+    body {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .customer-header {
+        padding-top: max(12px, env(safe-area-inset-top));
+    }
+
+    .modal-box {
+        padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
+    }
+}
+
+/* ===== تحسين التمرير على الموبايل ===== */
+.screen {
+    -webkit-overflow-scrolling: touch;
+}
+
+.customer-container,
+.admin-container,
+.owner-container {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* تحسين أداء التمرير */
+.tab-panel,
+.steps-content,
+.mbp-list,
+.owner-bookings-list,
+.all-trips-list,
+.filtered-trips-list,
+.route-results-list {
+    will-change: transform;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ===== تحسين عرض لوحة المفاتيح على الموبايل ===== */
+@media (max-height: 500px) and (max-width: 480px) {
+    .logo-section {
+        margin-bottom: 16px;
+    }
+
+    .logo-icon {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 8px;
+    }
+
+    .logo-icon svg {
+        width: 40px;
+        height: 40px;
+    }
+
+    .app-title {
+        font-size: 22px !important;
+    }
+
+    .steps-indicator {
+        padding: 8px 10px !important;
+    }
+
+    .step-circle {
+        width: 26px !important;
+        height: 26px !important;
+        font-size: 11px !important;
+    }
+
+    .step-line {
+        width: 20px !important;
+    }
+
+    .customer-header {
+        padding: 8px 12px;
+    }
+}
+
+/* ===== حاوية خريطة المقاعد ===== */
+.seat-map-container {
+    background: var(--card-bg) !important;
+    outline: 3px solid var(--card-outline) !important;
+    outline-offset: -3px;
+    border: none !important;
+    border-radius: var(--radius) !important;
+}
+
+/* ===== تخطيط الباص ===== */
+.bus-layout {
+    background: rgba(255, 255, 255, 0.05) !important;
+    outline: 2px solid var(--card-outline) !important;
+    outline-offset: -2px;
+    border: none !important;
+    border-radius: var(--radius-sm) !important;
+}
+
+/* ===== المقاعد ===== */
+.seat {
+    border-radius: 8px !important;
+    transition: var(--transition) !important;
+}
+
+.seat.available {
+    background: #1b5e20 !important;
+    border: 2px solid #D4AF37 !important;
+    color: #a5d6a7 !important;
+}
+
+.seat.available:hover {
+    background: #2e7d32 !important;
+    border-color: #F0D060 !important;
+    transform: scale(1.08) !important;
+    box-shadow: 0 2px 8px rgba(212, 175, 55, 0.5) !important;
+}
+
+.seat.selected {
+    background: #D4AF37 !important;
+    border: 2px solid #7f0000 !important;
+    color: #1A1A1A !important;
+    transform: scale(1.05) !important;
+    box-shadow: 0 2px 12px rgba(127, 0, 0, 0.5) !important;
+}
+
+.seat.occupied {
+    background: #7f0000 !important;
+    border: 2px solid #D4AF37 !important;
+    color: #ffffff !important;
+    cursor: not-allowed !important;
+}
+
+.seat.aisle {
+    background: transparent !important;
+    border: none !important;
+}
+
+/* ===== معلومات اختيار المقعد ===== */
+.seat-selection-info {
+    background: transparent !important;
+    border-radius: var(--radius-sm) !important;
+}
+
+.seat-selection-info.active {
+    background: var(--card-bg) !important;
+    outline: 2px solid var(--card-outline) !important;
+    outline-offset: -2px;
+    color: #ef9a9a !important;
+}
+
+.seat-selection-info .selected-seat-number {
+    color: #D4AF37 !important;
+}
+
+/* ===== مفتاح الألوان ===== */
+.legend-seat.available {
+    background: #1b5e20 !important;
+    border: 2px solid #D4AF37 !important;
+}
+
+.legend-seat.selected-legend {
+    background: #D4AF37 !important;
+    border: 2px solid #7f0000 !important;
+}
+
+.legend-seat.occupied {
+    background: #7f0000 !important;
+    border: 2px solid #D4AF37 !important;
+}
+
+.garages-list .garage-card:nth-child(3) { animation-delay: 0.15s; }
